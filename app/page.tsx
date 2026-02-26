@@ -1,109 +1,90 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-export default function Home() {
-  const [showUI, setShowUI] = useState(false);
-  // 1. 変数名を email に統一してエラーを解決します
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowUI(true);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 2. 変数名が email になったので、ここで正しくチェックできるようになります
-    if (email && password) {
-      router.push('/groups'); 
-    }
-  };
+export default function GroupsHome() {
+  const searchParams = useSearchParams();
+  // 登録画面から渡されたアバター番号を取得（デフォルトは1）
+  const avatarId = searchParams.get('avatar') || '1';
 
   return (
-    <main className="relative min-h-screen w-full bg-[#D6F8C2] flex flex-col items-center justify-center overflow-hidden font-sans">
+    <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
-      {/* 🐧 Phase 1: Frame 55.svg */}
-      <div className={`absolute inset-0 z-50 transition-opacity duration-1000 flex items-center justify-center bg-[#D6F8C2] ${showUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-        <div className="relative w-full h-full max-w-100 aspect-402/874">
-          <Image 
-            src="/Frame 55.svg" 
-            alt="イントロ" 
-            fill 
-            priority 
-            className="object-contain" 
-          />
-        </div>
+      {/* 🐧 ロゴエリア（最上部） */}
+      <div className="relative z-20 flex justify-center py-4 w-full bg-[#D6F8C2]">
+        <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
       </div>
 
-      {/* ✨ Phase 2: loginlogo.svg と ログインUI */}
-      <div className={`relative z-10 w-full flex flex-col items-center pt-20 px-8 transition-opacity duration-1000 ${showUI ? 'opacity-100' : 'opacity-0'}`}>
+      {/* 🟢 ヘッダーバー：選択したアイコンを表示 */}
+      <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
+        <Link href="/" className="active:scale-90 transition-transform">
+          <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
+        </Link>
         
-        <div className="relative w-64 h-32 mb-10">
-          <Image 
-            src="/loginlogo.svg" 
-            alt="ロゴ" 
-            fill
-            priority
-            className="object-contain"
-          />
+        <div className="flex items-center gap-3">
+          {/* ✨ 動的なユーザーアイコン：avatarId によって画像が変わります */}
+          <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-sm">
+            <Image 
+              src={`/avatars/avatar${avatarId}.svg`} 
+              alt="マイアイコン" 
+              width={36} 
+              height={36} 
+            />
+          </div>
+          {/* ハンバーガーメニュー */}
+          <div className="flex flex-col gap-1 w-7 cursor-pointer ml-1">
+            <div className="h-0.5 w-full bg-white rounded-full"></div>
+            <div className="h-0.5 w-full bg-white rounded-full"></div>
+            <div className="h-0.5 w-full bg-white rounded-full"></div>
+          </div>
         </div>
+      </header>
 
-        {/* 3. Tailwindのアドバイスに従い max-w-85 を適用しました */}
-        <div className="w-full max-w-85 bg-[#E9F6E5] rounded-[40px] p-8 shadow-sm border border-white/20 mb-8">
-          <p className="text-[#5A7C55] text-center text-xs font-bold mb-6 opacity-60 italic">おかえりなさい！</p>
-          
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-1">
-              <label className="text-[10px] ml-2 font-bold text-[#5A7C55] opacity-70">ログインID</label>
-              <input 
-                type="text"
-                value={email} // loginId から email に変更
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="メールアドレス（半角英数字）"
-                className="w-full px-5 py-3.5 rounded-2xl border-none outline-none shadow-inner bg-white text-gray-700 placeholder:text-gray-300"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] ml-2 font-bold text-[#5A7C55] opacity-70">パスワード</label>
-              <input 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="半角英数字"
-                className="w-full px-5 py-3.5 rounded-2xl border-none outline-none shadow-inner bg-white text-gray-700 placeholder:text-gray-300"
-              />
-            </div>
-
-            <button 
-              type="submit"
-              className="w-full bg-[#52A399] text-white font-bold py-4 rounded-full shadow-md active:scale-95 transition-transform text-lg mt-4"
-            >
-              ログイン
-            </button>
-          </form>
-        </div>
-
-        <div className="w-full max-w-85">
-          <div className="flex items-center w-full mb-8 px-2">
-            <div className="grow border-t border-[#52A399]/30"></div>
-            <span className="px-4 text-[10px] font-bold text-[#52A399] shrink-0">初めてご利用の方はこちら</span>
-            <div className="grow border-t border-[#52A399]/30"></div>
+      {/* 🐾 【足跡・ボタン配置エリア：400x691】 */}
+      <div className="relative z-10 w-[400px] h-[691px] flex flex-col items-center justify-center">
+        
+        {/* --- 背景の足跡レイヤー：位置をUI通りに微調整 --- */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {/* 右上の足跡：下端がペンギンのすぐ上に来るように配置 */}
+          <div className="absolute bottom-[380px] -right-10 w-[320px] h-[320px] opacity-30">
+            <Image src="/足跡右上.svg" alt="" fill className="object-contain" />
           </div>
 
-          <button 
-            onClick={() => router.push('/register')}
-            className="w-full bg-[#52A399] text-white font-bold py-4 rounded-full shadow-md active:scale-95 transition-transform text-lg"
-          >
-            新規会員登録
-          </button>
+          {/* 左下の足跡：ペンギンの足元から画面外へ流れるように配置 */}
+          <div className="absolute top-[350px] -left-12 w-[340px] h-[340px] opacity-30">
+            <Image src="/足跡左下.svg" alt="" fill className="object-contain" />
+          </div>
+        </div>
+
+        {/* --- コンテンツレイヤー --- */}
+        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center gap-16">
+          
+          {/* 1. グループ作成エリア */}
+          <div className="relative w-full flex justify-center max-w-[340px] pr-10">
+            <Link href="/groups/create" className="relative bg-white border-[4px] border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
+              <span className="text-[#389E95] text-xl font-bold">グループ作成</span>
+              <div className="absolute top-1/2 -right-3 w-6 h-6 bg-white border-t-[4px] border-r-[4px] border-[#389E95] rotate-[25deg] -translate-y-1/2"></div>
+            </Link>
+            {/* 右のペンギン（大） */}
+            <div className="absolute -right-4 -bottom-4 w-32 h-32">
+              <Image src="/大きいペンギン白 1.svg" alt="ペンギン大" width={128} height={128} className="object-contain" />
+            </div>
+          </div>
+
+          {/* 2. グループに入るエリア */}
+          <div className="relative w-full flex justify-center max-w-[340px] pl-10">
+            {/* 左のペンギン（小） */}
+            <div className="absolute -left-4 -top-8 w-28 h-28">
+              <Image src="/小さいペンギン白 1.svg" alt="ペンギン小" width={112} height={112} className="object-contain" />
+            </div>
+            <Link href="/groups/search" className="relative bg-white border-[4px] border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
+              <span className="text-[#389E95] text-xl font-bold">グループに入る</span>
+              <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-[4px] border-l-[4px] border-[#389E95] rotate-[25deg] -translate-y-1/2"></div>
+            </Link>
+          </div>
+
         </div>
       </div>
     </main>

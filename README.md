@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ASOBOKKA
 
-## Getting Started
+Supabase 認証 + リアルタイム同期で、5桁の合言葉を使ってグループ参加・選択内容の同時共有を行う Next.js アプリです。
 
-First, run the development server:
+## セットアップ
+
+1. 依存関係をインストール
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 環境変数を設定
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env.local` に以下を設定します。
 
-## Learn More
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-To learn more about Next.js, take a look at the following resources:
+3. Supabase SQL を実行
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Supabase ダッシュボードの SQL Editor で [supabase/schema.sql](supabase/schema.sql) を実行してください。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 開発サーバー
 
-## Deploy on Vercel
+```bash
+pnpm dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+ブラウザで `http://localhost:3000` を開きます。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 実装済み機能
+
+- メールアドレス登録 / ログイン
+- 匿名ログイン
+- 5桁合言葉の重複なしグループ作成
+- 合言葉検索とグループ参加
+- ルーム内の選択情報保存（エリア・目的・価値観・待機完了）
+- Supabase Realtime によるメンバー状態の即時同期
+- 全員待機完了時の結果画面自動遷移
+- RLS によるグループ外アクセス制御
+
+## 動作確認チェック
+
+1. PC とスマホで `login/register/create/search/group/result` 画面のレイアウト確認
+2. 2 端末以上で同一合言葉に参加し、選択内容が即時同期されるか確認
+3. 全員が「待機完了」で結果画面へ自動遷移するか確認
+4. Vercel の本番 URL で同様のシナリオを再確認

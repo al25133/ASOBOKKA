@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function GroupSearch() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const avatarId = searchParams.get('avatar') || '1';
+  const avatarId = '1';
 
   // 入力されたグループ番号の状態管理
   const [groupCode, setGroupCode] = useState("");
@@ -18,7 +17,7 @@ export default function GroupSearch() {
     if (groupCode.length > 0) {
       // 本来はここで番号の認証を行いますが、今は遷移のみ
       alert(`グループ ${groupCode} に参加します！`);
-      router.push(`/groups/create?avatar=${avatarId}`); // 成功したらメンバー一覧画面へ
+      router.push('/groups/create'); // 成功したらメンバー一覧画面へ
     }
   };
 

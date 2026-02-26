@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function GroupCreate() {
-  const searchParams = useSearchParams();
-  const avatarId = searchParams.get('avatar') || '1';
+  const avatarId = '1';
 
   // 仮データ
   const [groupCode] = useState("01928"); 
