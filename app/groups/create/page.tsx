@@ -9,6 +9,8 @@ import { AccountMenu } from '@/components/ui/account-menu';
 
 type GroupMember = {
   user_id: string;
+  nickname: string;
+  avatar: string;
 };
 
 export default function GroupCreate() {
@@ -23,18 +25,31 @@ export default function GroupCreate() {
 
   const fetchMembers = async (targetGroupId: string) => {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
-      .from('group_members')
-      .select('user_id')
-      .eq('group_id', targetGroupId)
-      .order('created_at', { ascending: true });
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
 
-    if (error) {
-      setMessage(error.message);
+    if (!accessToken) {
+      setMessage('セッションが確認できませんでした。再ログインしてください。');
       return;
     }
 
-    setMembers(data ?? []);
+    const response = await fetch('/api/groups/members', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupId: targetGroupId }),
+    });
+
+    if (!response.ok) {
+      const result = (await response.json().catch(() => null)) as { message?: string } | null;
+      setMessage(result?.message ?? 'メンバー情報の取得に失敗しました。');
+      return;
+    }
+
+    const result = (await response.json()) as { members?: GroupMember[] };
+    setMembers(result.members ?? []);
   };
 
   useEffect(() => {
@@ -155,10 +170,10 @@ export default function GroupCreate() {
               {members.map((member) => (
                 <div key={member.user_id} className="flex flex-col items-center gap-2">
                   <div className="w-14 h-14 rounded-full border-2 border-[#D6F8C2] overflow-hidden bg-white shadow-sm">
-                    <Image src={`/avatars/avatar${avatarId}.svg`} alt="メンバー" width={56} height={56} />
+                    <Image src={`/avatars/avatar${member.avatar}.svg`} alt="メンバー" width={56} height={56} />
                   </div>
                   <span className="text-[10px] text-[#5A5A5A] font-bold">
-                    {member.user_id === userId ? 'あなた' : `メンバー ${member.user_id.slice(0, 4)}`}
+                    {member.user_id === userId ? 'あなた' : member.nickname}
                   </span>
                 </div>
               ))}

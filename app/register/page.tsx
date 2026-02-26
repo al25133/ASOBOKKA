@@ -53,10 +53,13 @@ export default function Register() {
     setLoading(true);
     setMessage(null);
 
+    const emailRedirectTo = `${window.location.origin}/login`;
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
+        emailRedirectTo,
         data: {
           nickname: trimmedNickname,
           icon: selectedAvatar,
@@ -71,16 +74,11 @@ export default function Register() {
       return;
     }
 
-    if (!data.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (signInError) {
-        setLoading(false);
-        setMessage('登録が完了しました。メール確認後にログインしてください。');
-        return;
-      }
-    }
-
     setLoading(false);
+    if (!data.session) {
+      setMessage('登録が完了しました。確認メールのリンクを開いてからログインしてください。');
+      return;
+    }
     router.push('/');
   };
 

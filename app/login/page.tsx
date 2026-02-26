@@ -20,11 +20,21 @@ export default function Login() {
 		setLoading(true);
 		setMessage(null);
 		const { error } = await supabase.auth.signInWithPassword({ email, password });
-		setLoading(false);
 		if (error) {
+			setLoading(false);
 			setMessage(error.message);
 			return;
 		}
+
+		const { data: userData } = await supabase.auth.getUser();
+		if (!userData.user?.email_confirmed_at) {
+			await supabase.auth.signOut();
+			setLoading(false);
+			setMessage("メール確認が完了していません。確認メールのリンクを開いてからログインしてください。");
+			return;
+		}
+
+		setLoading(false);
 		router.push("/");
 	};
 

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ASOBOKKA",
+  title: "あそぼっか",
   description: "合言葉ベースでグループ同期するおでかけ支援アプリ",
 };
 

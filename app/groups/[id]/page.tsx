@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ const valueOptions = ["コスパ重視", "雰囲気重視", "アクセス重視"
 
 type MemberRow = {
 	user_id: string;
+	nickname: string;
+	avatar: string;
 	selected_area: string | null;
 	selected_purpose: string | null;
 	selected_value: string | null;
@@ -72,18 +75,31 @@ export default function GroupRoom() {
 	const fetchMembers = useCallback(
 		async (targetGroupId: string) => {
 			const supabase = getSupabaseClient();
-			const { data, error } = await supabase
-				.from("group_members")
-				.select("user_id, selected_area, selected_purpose, selected_value, is_ready")
-				.eq("group_id", targetGroupId)
-				.order("created_at", { ascending: true });
+			const { data: sessionData } = await supabase.auth.getSession();
+			const accessToken = sessionData.session?.access_token;
 
-			if (error) {
-				setMessage(error.message);
+			if (!accessToken) {
+				setMessage("セッションが確認できませんでした。再ログインしてください。");
 				return;
 			}
 
-			setMembers(data ?? []);
+			const response = await fetch("/api/groups/members", {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ groupId: targetGroupId }),
+			});
+
+			if (!response.ok) {
+				const result = (await response.json().catch(() => null)) as { message?: string } | null;
+				setMessage(result?.message ?? "メンバー情報の取得に失敗しました。");
+				return;
+			}
+
+			const result = (await response.json()) as { members?: MemberRow[] };
+			setMembers(result.members ?? []);
 		},
 		[],
 	);
@@ -217,9 +233,12 @@ export default function GroupRoom() {
 					<ul className="space-y-2">
 						{members.map((member) => (
 							<li key={member.user_id} className="rounded-xl border border-zinc-200 p-3 text-sm">
-								<p className="font-medium">
-									{member.user_id === userId ? "あなた" : `メンバー ${member.user_id.slice(0, 8)}`}
-								</p>
+								<div className="mb-2 flex items-center gap-2">
+									<div className="relative h-8 w-8 overflow-hidden rounded-full border border-zinc-200 bg-white">
+										<Image src={`/avatars/avatar${member.avatar}.svg`} alt="メンバーアイコン" fill className="object-contain" />
+									</div>
+									<p className="font-medium">{member.user_id === userId ? "あなた" : member.nickname}</p>
+								</div>
 								<p className="text-zinc-600">エリア: {member.selected_area ?? "未選択"}</p>
 								<p className="text-zinc-600">目的: {member.selected_purpose ?? "未選択"}</p>
 								<p className="text-zinc-600">価値観: {member.selected_value ?? "未選択"}</p>
