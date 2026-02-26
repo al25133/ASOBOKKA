@@ -1,10 +1,11 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function GroupsHome() {
+function GroupsHomeContent() {
   const searchParams = useSearchParams();
   // 登録画面から渡されたアバター番号を取得（デフォルトは1）
   const avatarId = searchParams.get('avatar') || '1';
@@ -88,5 +89,13 @@ export default function GroupsHome() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function GroupsHome() {
+  return (
+    <Suspense fallback={null}>
+      <GroupsHomeContent />
+    </Suspense>
   );
 }
