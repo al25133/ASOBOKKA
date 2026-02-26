@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
@@ -13,9 +14,27 @@ export default function Register() {
   const [nickname, setNickname] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
   const avatars = Array.from({ length: 10 }, (_, i) => i + 1);
+  const canSubmit = Boolean(email.trim() && password && nickname.trim() && selectedAvatar);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getUser();
+
+      if (data.user) {
+        router.replace('/');
+        return;
+      }
+
+      setAuthChecking(false);
+    };
+
+    void checkAuth();
+  }, [router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,16 +43,23 @@ export default function Register() {
       return;
     }
 
+    const trimmedNickname = nickname.trim();
+    if (!trimmedNickname) {
+      setMessage('ニックネームを入力してください。');
+      return;
+    }
+
     const supabase = getSupabaseClient();
     setLoading(true);
     setMessage(null);
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         data: {
-          nickname,
+          nickname: trimmedNickname,
+          icon: selectedAvatar,
           avatar: selectedAvatar,
         },
       },
@@ -46,11 +72,10 @@ export default function Register() {
     }
 
     if (!data.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError) {
         setLoading(false);
-        setMessage("登録しました。メール確認後にログインしてください。");
-        router.push('/login');
+        setMessage('登録が完了しました。メール確認後にログインしてください。');
         return;
       }
     }
@@ -59,19 +84,25 @@ export default function Register() {
     router.push('/');
   };
 
+  if (authChecking) {
+    return <main className="min-h-screen bg-[#D6F8C2]" />;
+  }
+
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
       
       {/* 上部ロゴエリア */}
       <div className="pt-12 pb-8">
-        <Image 
-          src="/loginlogo.svg" 
-          alt="あそぼっか ロゴ" 
-          width={180} 
-          height={90} 
-          priority
-          className="object-contain"
-        />
+        <Link href="/" className="active:scale-95 transition-transform inline-block">
+          <Image 
+            src="/loginlogo.svg" 
+            alt="あそぼっか ロゴ" 
+            width={180} 
+            height={90} 
+            priority
+            className="object-contain"
+          />
+        </Link>
       </div>
 
       {/* 新規登録カード */}
@@ -122,7 +153,7 @@ export default function Register() {
           </div>
 
           <div className="pt-6 flex justify-center">
-            <button type="submit" disabled={loading} className="bg-[#52A399] text-white font-bold py-4 px-12 rounded-2xl shadow-lg active:scale-95 transition-all text-lg flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
+            <button type="submit" disabled={loading || !canSubmit} className="bg-[#52A399] text-white font-bold py-4 px-12 rounded-2xl shadow-lg active:scale-95 transition-all text-lg flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
               {loading ? '登録中...' : '会員登録する'} <span className="text-xl">≫</span>
             </button>
           </div>

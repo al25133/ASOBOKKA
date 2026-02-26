@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { AccountMenu } from '@/components/ui/account-menu';
 
 function GroupsHomeContent() {
   const router = useRouter();
@@ -45,7 +46,9 @@ function GroupsHomeContent() {
       
       {/* 🐧 ロゴエリア（最上部） */}
       <div className="relative z-20 flex justify-center py-4 w-full bg-[#D6F8C2]">
-        <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
+        <Link href="/" className="active:scale-95 transition-transform">
+          <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
+        </Link>
       </div>
 
       {/* 🟢 ヘッダーバー：選択したアイコンを表示 */}
@@ -54,23 +57,7 @@ function GroupsHomeContent() {
           <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
         </Link>
         
-        <div className="flex items-center gap-3">
-          {/* ✨ 動的なユーザーアイコン：avatarId によって画像が変わります */}
-          <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-sm">
-            <Image 
-              src={`/avatars/avatar${avatarId}.svg`} 
-              alt="マイアイコン" 
-              width={36} 
-              height={36} 
-            />
-          </div>
-          {/* ハンバーガーメニュー */}
-          <div className="flex flex-col gap-1 w-7 cursor-pointer ml-1">
-            <div className="h-0.5 w-full bg-white rounded-full"></div>
-            <div className="h-0.5 w-full bg-white rounded-full"></div>
-            <div className="h-0.5 w-full bg-white rounded-full"></div>
-          </div>
-        </div>
+        <AccountMenu avatarId={avatarId} />
       </header>
 
       {/* 🐾 【足跡・ボタン配置エリア：400x691】 */}

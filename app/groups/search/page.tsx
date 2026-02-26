@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { AccountMenu } from '@/components/ui/account-menu';
 
 export default function GroupSearch() {
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
   const [avatarId, setAvatarId] = useState('1');
+  const [message, setMessage] = useState<string | null>(null);
 
-  // 入力されたグループ番号の状態管理
   const [groupCode, setGroupCode] = useState("");
 
   useEffect(() => {
@@ -41,11 +42,14 @@ export default function GroupSearch() {
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (groupCode.length > 0) {
-      // 本来はここで番号の認証を行いますが、今は遷移のみ
-      alert(`グループ ${groupCode} に参加します！`);
-      router.push('/groups/create'); // 成功したらメンバー一覧画面へ
+    const normalized = groupCode.replace(/\D/g, '').slice(0, 5);
+    if (normalized.length !== 5) {
+      setMessage('5桁のグループ番号を入力してください。');
+      return;
     }
+
+    setMessage(null);
+    router.push(`/groups/${normalized}`);
   };
 
   return (
@@ -53,7 +57,9 @@ export default function GroupSearch() {
       
       {/* 🐧 ロゴエリア */}
       <div className="relative z-20 flex justify-center py-4 w-full">
-        <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
+        <Link href="/" className="active:scale-95 transition-transform">
+          <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
+        </Link>
       </div>
 
       {/* 🟢 ヘッダーバー：ブランドカラー #389E95 */}
@@ -61,16 +67,7 @@ export default function GroupSearch() {
         <Link href="/groups" className="active:scale-90 transition-transform">
           <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
         </Link>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-sm">
-            <Image src={`/avatars/avatar${avatarId}.svg`} alt="マイアイコン" width={36} height={36} />
-          </div>
-          <div className="flex flex-col gap-1 w-7 cursor-pointer">
-            <div className="h-0.5 w-full bg-white rounded-full"></div>
-            <div className="h-0.5 w-full bg-white rounded-full"></div>
-            <div className="h-0.5 w-full bg-white rounded-full"></div>
-          </div>
-        </div>
+        <AccountMenu avatarId={avatarId} />
       </header>
 
       {/* 🐾 メインコンテンツ：ペンギンと入力吹き出し */}
@@ -87,8 +84,10 @@ export default function GroupSearch() {
             <input 
               type="text"
               value={groupCode}
-              onChange={(e) => setGroupCode(e.target.value)}
+              onChange={(e) => setGroupCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
               placeholder="番号をここに入力してね"
+              inputMode="numeric"
+              maxLength={5}
               className="w-full text-center text-3xl font-bold text-[#5A5A5A] outline-none placeholder:text-[#BABABA] placeholder:text-sm placeholder:font-normal"
             />
             {/* 吹き出しのしっぽ（左側のペンギンへ向ける） */}
@@ -104,6 +103,7 @@ export default function GroupSearch() {
           >
             グループに入る
           </button>
+          {message ? <p className="text-sm text-red-600">{message}</p> : null}
           
           <Link 
             href="/groups"
