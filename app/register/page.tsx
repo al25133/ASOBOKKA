@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 export default function Register() {
   const router = useRouter();
@@ -11,19 +12,51 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const avatars = Array.from({ length: 10 }, (_, i) => i + 1);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAvatar) {
-      alert("アイコンを選択してください！");
+      setMessage("アイコンを選択してください。");
       return;
     }
-    // ここに登録処理を記述
-    console.log("登録データ:", { email, password, nickname, selectedAvatar });
-    alert("会員登録が完了しました！");
-    router.push('/'); 
+
+    const supabase = getSupabaseClient();
+    setLoading(true);
+    setMessage(null);
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nickname,
+          avatar: selectedAvatar,
+        },
+      },
+    });
+
+    if (error) {
+      setLoading(false);
+      setMessage(error.message);
+      return;
+    }
+
+    if (!data.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        setLoading(false);
+        setMessage("登録しました。メール確認後にログインしてください。");
+        router.push('/login');
+        return;
+      }
+    }
+
+    setLoading(false);
+    router.push('/');
   };
 
   return (
@@ -42,7 +75,7 @@ export default function Register() {
       </div>
 
       {/* 新規登録カード */}
-      <div className="w-full max-w-[450px] bg-white rounded-t-[60px] flex-grow px-10 pt-12 pb-12 shadow-2xl">
+      <div className="w-full max-w-112.5 bg-white rounded-t-[60px] grow px-10 pt-12 pb-12 shadow-2xl">
         <h2 className="text-[#5A7C55] text-center text-2xl font-bold mb-10">新規会員登録</h2>
 
         <form onSubmit={handleRegister} className="space-y-8">
@@ -89,10 +122,11 @@ export default function Register() {
           </div>
 
           <div className="pt-6 flex justify-center">
-            <button type="submit" className="bg-[#52A399] text-white font-bold py-4 px-12 rounded-2xl shadow-lg active:scale-95 transition-all text-lg flex items-center gap-3">
-              会員登録する <span className="text-xl">≫</span>
+            <button type="submit" disabled={loading} className="bg-[#52A399] text-white font-bold py-4 px-12 rounded-2xl shadow-lg active:scale-95 transition-all text-lg flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
+              {loading ? '登録中...' : '会員登録する'} <span className="text-xl">≫</span>
             </button>
           </div>
+          {message ? <p className="text-center text-sm text-red-600">{message}</p> : null}
         </form>
       </div>
     </main>

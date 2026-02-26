@@ -25,7 +25,7 @@ export default function Login() {
 			setMessage(error.message);
 			return;
 		}
-		router.push("/home");
+		router.push("/");
 	};
 
 	const loginAnonymously = async () => {
@@ -38,7 +38,7 @@ export default function Login() {
 			setMessage(error.message);
 			return;
 		}
-		router.push("/home");
+		router.push("/");
 	};
 
 	return (
