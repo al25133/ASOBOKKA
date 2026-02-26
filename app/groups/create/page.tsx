@@ -92,7 +92,7 @@ export default function GroupCreate() {
           <span className="text-[#389E95] font-bold">戻る</span>
         </Link>
         <Link href="/groups/next" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
-          <span className="text-[#389E95] font-bold">次へ</span>
+          <span className="text-[#389E95] font-bold">診断スタート</span>
         </Link>
       </div>
 
