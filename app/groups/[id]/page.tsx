@@ -57,7 +57,6 @@ function OptionGroup({
 export default function GroupRoom() {
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
-	const supabase = getSupabaseClient();
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
@@ -72,6 +71,7 @@ export default function GroupRoom() {
 
 	const fetchMembers = useCallback(
 		async (targetGroupId: string) => {
+			const supabase = getSupabaseClient();
 			const { data, error } = await supabase
 				.from("group_members")
 				.select("user_id, selected_area, selected_purpose, selected_value, is_ready")
@@ -85,11 +85,12 @@ export default function GroupRoom() {
 
 			setMembers(data ?? []);
 		},
-		[supabase],
+		[],
 	);
 
 	useEffect(() => {
 		const initialize = async () => {
+			const supabase = getSupabaseClient();
 			const [{ data: authData }, joinResult] = await Promise.all([
 				supabase.auth.getUser(),
 				supabase.rpc("join_group_by_passcode", { input_passcode: passcode }),
@@ -113,12 +114,14 @@ export default function GroupRoom() {
 		};
 
 		void initialize();
-	}, [fetchMembers, passcode, router, supabase]);
+	}, [fetchMembers, passcode, router]);
 
 	useEffect(() => {
 		if (!groupId) {
 			return;
 		}
+
+		const supabase = getSupabaseClient();
 
 		const channel = supabase
 			.channel(`group-members-${groupId}`)
@@ -139,7 +142,7 @@ export default function GroupRoom() {
 		return () => {
 			void supabase.removeChannel(channel);
 		};
-	}, [fetchMembers, groupId, supabase]);
+	}, [fetchMembers, groupId]);
 
 	const allReady = useMemo(() => members.length > 0 && members.every((member) => member.is_ready), [members]);
 
@@ -151,6 +154,7 @@ export default function GroupRoom() {
 	}, [allReady, passcode, router]);
 
 	const saveSelection = async (ready: boolean) => {
+		const supabase = getSupabaseClient();
 		if (!groupId || !userId) {
 			return;
 		}

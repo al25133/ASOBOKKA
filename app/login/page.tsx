@@ -10,13 +10,13 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function Login() {
 	const router = useRouter();
-	const supabase = getSupabaseClient();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
 
 	const loginWithEmail = async () => {
+		const supabase = getSupabaseClient();
 		setLoading(true);
 		setMessage(null);
 		const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -29,6 +29,7 @@ export default function Login() {
 	};
 
 	const loginAnonymously = async () => {
+		const supabase = getSupabaseClient();
 		setLoading(true);
 		setMessage(null);
 		const { error } = await supabase.auth.signInAnonymously();

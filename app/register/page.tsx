@@ -10,13 +10,13 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function Register() {
 	const router = useRouter();
-	const supabase = getSupabaseClient();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
 
 	const register = async () => {
+		const supabase = getSupabaseClient();
 		setLoading(true);
 		setMessage(null);
 		const { error } = await supabase.auth.signUp({

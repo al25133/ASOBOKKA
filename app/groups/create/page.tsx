@@ -9,21 +9,22 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function GroupCreate() {
 	const router = useRouter();
-	const supabase = getSupabaseClient();
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const load = async () => {
+			const supabase = getSupabaseClient();
 			const { data } = await supabase.auth.getUser();
 			if (!data.user) {
 				router.replace("/login");
 			}
 		};
 		void load();
-	}, [router, supabase.auth]);
+	}, [router]);
 
 	const createGroup = async () => {
+		const supabase = getSupabaseClient();
 		setLoading(true);
 		setMessage(null);
 		const { data, error } = await supabase.rpc("create_group_with_unique_passcode");

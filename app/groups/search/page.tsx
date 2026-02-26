@@ -10,12 +10,12 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function GroupSearch() {
 	const router = useRouter();
-	const supabase = getSupabaseClient();
 	const [passcode, setPasscode] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
 
 	const search = async () => {
+		const supabase = getSupabaseClient();
 		if (passcode.length !== 5) {
 			setMessage("5桁の数字を入力してください。");
 			return;

@@ -25,13 +25,13 @@ function aggregate(items: Array<string | null>) {
 export default function GroupResult() {
 	const params = useParams<{ id: string }>();
 	const passcode = params.id;
-	const supabase = getSupabaseClient();
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [message, setMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const load = async () => {
+			const supabase = getSupabaseClient();
 			const { data: groupData, error: groupError } = await supabase.rpc("find_group_by_passcode", {
 				input_passcode: passcode,
 			});
@@ -56,7 +56,7 @@ export default function GroupResult() {
 		};
 
 		void load();
-	}, [passcode, supabase]);
+	}, [passcode]);
 
 	const areaStats = useMemo(() => aggregate(choices.map((choice) => choice.selected_area)), [choices]);
 	const purposeStats = useMemo(() => aggregate(choices.map((choice) => choice.selected_purpose)), [choices]);
