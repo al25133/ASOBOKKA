@@ -19,7 +19,7 @@ cp .env.example .env.local
 `.env.local` に以下を設定します。
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 3. Supabase SQL を実行
 
@@ -56,9 +56,21 @@ pnpm dev
 `CI` ワークフロー（`.github/workflows/ci.yml`）は、以下の GitHub Secrets を必須で参照します。
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY`（推奨）
 
 設定場所: `GitHub Repository > Settings > Secrets and variables > Actions`
 
 Secrets を追加した後は、`main` への push か `Actions > CI > Run workflow` で実行してください。
+
+## Vercel での環境変数設定
+
+Vercel でも同じ名前で環境変数を設定します。
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY`
+
+設定場所: `Vercel Project > Settings > Environment Variables`
+
+設定後は再デプロイ（Redeploy）してください。

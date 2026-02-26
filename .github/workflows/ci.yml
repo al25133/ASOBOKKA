@@ -13,8 +13,8 @@ jobs:
       contents: read
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
 
     steps:
       - name: Checkout
@@ -40,13 +40,13 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY}" ]; then
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY is not set"
+          if [ -z "${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}" ]; then
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is not set"
             exit 1
           fi
 
-          if [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
-            echo "SUPABASE_SERVICE_ROLE_KEY is not set"
+          if [ -z "${SUPABASE_SECRET_KEY}" ]; then
+            echo "SUPABASE_SECRET_KEY is not set"
             exit 1
           fi
 
