@@ -156,6 +156,10 @@ export default function Register() {
             </button>
           </div>
           {message ? <p className="text-center text-sm text-red-600">{message}</p> : null}
+
+          <p className="text-center text-sm text-[#6D8D69]">
+            登録済みの方は <Link href="/login" className="underline font-semibold">ログイン</Link>
+          </p>
         </form>
       </div>
     </main>

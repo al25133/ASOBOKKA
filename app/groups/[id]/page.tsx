@@ -1,10 +1,11 @@
+// 仮デザイン: 本画面は一時的な暫定UIです（後続で正式デザインへ置き換え予定）。
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Header } from "@/components/ui/header";
+import { AccountMenu } from "@/components/ui/account-menu";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +36,7 @@ function OptionGroup({
 }) {
 	return (
 		<section className="space-y-2">
-			<h2 className="text-sm font-semibold text-zinc-700">{title}</h2>
+			<h2 className="text-sm font-bold text-[#5A7C55]">{title}</h2>
 			<div className="grid grid-cols-2 gap-2">
 				{options.map((option) => (
 					<button
@@ -43,10 +44,10 @@ function OptionGroup({
 						type="button"
 						onClick={() => onSelect(option)}
 						className={cn(
-							"rounded-xl border px-3 py-2 text-left text-sm transition",
+							"rounded-2xl border px-3 py-2 text-left text-sm transition",
 							value === option
-								? "border-foreground bg-foreground text-background"
-								: "border-zinc-300 hover:bg-zinc-50",
+								? "border-[#52A399] bg-[#52A399] text-white"
+								: "border-gray-200 bg-[#F9FBF9] text-[#5A5A5A] hover:bg-[#EEF7EB]",
 						)}
 					>
 						{option}
@@ -60,6 +61,7 @@ function OptionGroup({
 export default function GroupRoom() {
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
+	const [avatarId, setAvatarId] = useState("1");
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
@@ -117,6 +119,11 @@ export default function GroupRoom() {
 				return;
 			}
 			setUserId(authData.user.id);
+
+			const avatar = authData.user.user_metadata?.avatar;
+			if (typeof avatar === "number" || typeof avatar === "string") {
+				setAvatarId(String(avatar));
+			}
 
 			if (joinResult.error || !joinResult.data) {
 				setMessage("グループが見つかりませんでした。");
@@ -204,51 +211,78 @@ export default function GroupRoom() {
 	};
 
 	if (loading) {
-		return <main className="mx-auto min-h-screen w-full max-w-3xl p-6">読み込み中...</main>;
+		return <main className="min-h-screen bg-[#D6F8C2]" />;
 	}
 
 	return (
-		<main className="mx-auto min-h-screen w-full max-w-3xl p-6">
-			<Header title={`グループ ${passcode}`} description="選択内容はリアルタイムで同期されます。" />
+		<main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
+			<div className="relative z-20 flex justify-center py-4 w-full">
+				<Link href="/" className="active:scale-95 transition-transform">
+					<Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
+				</Link>
+			</div>
 
-			<div className="grid gap-6 md:grid-cols-[1fr_320px]">
-				<section className="space-y-5 rounded-2xl border border-zinc-200 p-5">
-					<OptionGroup title="エリア" options={areaOptions} value={area} onSelect={setArea} />
-					<OptionGroup title="目的" options={purposeOptions} value={purpose} onSelect={setPurpose} />
-					<OptionGroup title="価値観" options={valueOptions} value={value} onSelect={setValue} />
+			<header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
+				<Link href="/groups" className="active:scale-90 transition-transform">
+					<Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
+				</Link>
+				<AccountMenu avatarId={avatarId} />
+			</header>
 
-					<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-						<Button variant="secondary" disabled={saving} onClick={() => void saveSelection(false)}>
-							選択を保存
-						</Button>
-						<Button disabled={saving} onClick={() => void saveSelection(true)}>
-							待機完了
-						</Button>
-					</div>
-					{message ? <p className="text-sm text-zinc-700">{message}</p> : null}
+			<div className="relative z-10 w-full max-w-112.5 px-6 pt-8 pb-12 space-y-6">
+				<section className="bg-white rounded-[30px] border-2 border-[#389E95]/40 p-5 shadow-sm">
+					<p className="text-[#389E95] text-xs font-bold mb-1">グループ番号</p>
+					<p className="text-[#5A5A5A] text-4xl font-bold tracking-widest">{passcode}</p>
+					<p className="text-[#389E95] text-xs mt-2">選択内容はリアルタイムで同期されます。</p>
 				</section>
 
-				<aside className="rounded-2xl border border-zinc-200 p-5">
-					<h2 className="mb-3 text-sm font-semibold text-zinc-700">メンバー状況</h2>
-					<ul className="space-y-2">
-						{members.map((member) => (
-							<li key={member.user_id} className="rounded-xl border border-zinc-200 p-3 text-sm">
-								<div className="mb-2 flex items-center gap-2">
-									<div className="relative h-8 w-8 overflow-hidden rounded-full border border-zinc-200 bg-white">
-										<Image src={`/avatars/avatar${member.avatar}.svg`} alt="メンバーアイコン" fill className="object-contain" />
+				<div className="grid gap-6 md:grid-cols-[1fr_320px]">
+					<section className="space-y-5 bg-white rounded-[30px] p-5 border border-[#389E95]/20 shadow-sm">
+						<OptionGroup title="エリア" options={areaOptions} value={area} onSelect={setArea} />
+						<OptionGroup title="目的" options={purposeOptions} value={purpose} onSelect={setPurpose} />
+						<OptionGroup title="価値観" options={valueOptions} value={value} onSelect={setValue} />
+
+						<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 pt-2">
+							<button
+								type="button"
+								disabled={saving}
+								onClick={() => void saveSelection(false)}
+								className="w-full bg-white border-2 border-[#52A399]/40 text-[#389E95] font-bold py-3 rounded-2xl shadow-sm active:scale-95 transition-all disabled:opacity-70"
+							>
+								選択を保存
+							</button>
+							<button
+								type="button"
+								disabled={saving}
+								onClick={() => void saveSelection(true)}
+								className="w-full bg-[#52A399] text-white font-bold py-3 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-70"
+							>
+								待機完了
+							</button>
+						</div>
+						{message ? <p className="text-sm text-[#5A5A5A]">{message}</p> : null}
+					</section>
+
+					<aside className="bg-white rounded-[30px] p-5 border border-[#389E95]/20 shadow-sm">
+						<h2 className="mb-3 text-sm font-bold text-[#5A7C55]">メンバー状況</h2>
+						<ul className="space-y-2">
+							{members.map((member) => (
+								<li key={member.user_id} className="rounded-2xl border border-[#389E95]/20 p-3 text-sm bg-[#F9FBF9]">
+									<div className="mb-2 flex items-center gap-2">
+										<div className="relative h-8 w-8 overflow-hidden rounded-full border border-[#D6F8C2] bg-white">
+											<Image src={`/avatars/avatar${member.avatar}.svg`} alt="メンバーアイコン" fill className="object-contain" />
+										</div>
+										<p className="font-semibold text-[#5A5A5A]">{member.user_id === userId ? "あなた" : member.nickname}</p>
 									</div>
-									<p className="font-medium">{member.user_id === userId ? "あなた" : member.nickname}</p>
-								</div>
-								<p className="text-zinc-600">エリア: {member.selected_area ?? "未選択"}</p>
-								<p className="text-zinc-600">目的: {member.selected_purpose ?? "未選択"}</p>
-								<p className="text-zinc-600">価値観: {member.selected_value ?? "未選択"}</p>
-								<p className={member.is_ready ? "text-emerald-600" : "text-zinc-500"}>
-									{member.is_ready ? "待機完了" : "入力中"}
-								</p>
-							</li>
-						))}
-					</ul>
-				</aside>
+									<p className="text-[#6D8D69]">エリア: {member.selected_area ?? "未選択"}</p>
+									<p className="text-[#6D8D69]">目的: {member.selected_purpose ?? "未選択"}</p>
+									<p className="text-[#6D8D69]">価値観: {member.selected_value ?? "未選択"}</p>
+									<p className={member.is_ready ? "text-emerald-600" : "text-[#6D8D69]"}>{member.is_ready ? "待機完了" : "入力中"}</p>
+								</li>
+							))}
+						</ul>
+					</aside>
+				</div>
 			</div>
 		</main>
 	);
