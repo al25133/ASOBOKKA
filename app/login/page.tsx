@@ -79,7 +79,7 @@ export default function Login() {
 							disabled={loading || !email || !password}
 							className="w-full bg-[#52A399] text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
 						>
-							{loading ? "ログイン中..." : "メールでログイン"}
+							{loading ? "ログイン中..." : "ログイン"}
 						</button>
 					</div>
 
