@@ -50,3 +50,15 @@ pnpm dev
 2. 2 端末以上で同一合言葉に参加し、選択内容が即時同期されるか確認
 3. 全員が「待機完了」で結果画面へ自動遷移するか確認
 4. Vercel の本番 URL で同様のシナリオを再確認
+
+## GitHub Actions での環境変数設定
+
+`CI` ワークフロー（`.github/workflows/ci.yml`）は、以下の GitHub Secrets を必須で参照します。
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+設定場所: `GitHub Repository > Settings > Secrets and variables > Actions`
+
+Secrets を追加した後は、`main` への push か `Actions > CI > Run workflow` で実行してください。
