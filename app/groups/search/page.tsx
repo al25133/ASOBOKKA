@@ -1,16 +1,43 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 export default function GroupSearch() {
   const router = useRouter();
-  const avatarId = '1';
+  const [authChecked, setAuthChecked] = useState(false);
+  const [avatarId, setAvatarId] = useState('1');
 
   // 入力されたグループ番号の状態管理
   const [groupCode, setGroupCode] = useState("");
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        router.replace('/login');
+        return;
+      }
+
+      const avatar = data.user.user_metadata?.avatar;
+      if (typeof avatar === 'number' || typeof avatar === 'string') {
+        setAvatarId(String(avatar));
+      }
+
+      setAuthChecked(true);
+    };
+
+    void checkAuth();
+  }, [router]);
+
+  if (!authChecked) {
+    return <main className="min-h-screen bg-[#D6F8C2]" />;
+  }
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +74,7 @@ export default function GroupSearch() {
       </header>
 
       {/* 🐾 メインコンテンツ：ペンギンと入力吹き出し */}
-      <div className="relative z-10 w-full max-w-[402px] flex flex-col items-center pt-32 px-10 pb-40">
+      <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-32 px-10 pb-40">
         
         <div className="relative w-full mb-20 flex justify-end">
           {/* ✨ 左側にいるペンギン（小さいペンギン白 1.svg） */}
@@ -56,7 +83,7 @@ export default function GroupSearch() {
           </div>
 
           {/* 💬 入力用の吹き出し */}
-          <div className="bg-white border-[3px] border-[#389E95] rounded-[25px] w-full ml-12 p-6 min-h-[100px] flex items-center justify-center relative shadow-sm">
+          <div className="bg-white border-[3px] border-[#389E95] rounded-[25px] w-full ml-12 p-6 min-h-25 flex items-center justify-center relative shadow-sm">
             <input 
               type="text"
               value={groupCode}
@@ -65,7 +92,7 @@ export default function GroupSearch() {
               className="w-full text-center text-3xl font-bold text-[#5A5A5A] outline-none placeholder:text-[#BABABA] placeholder:text-sm placeholder:font-normal"
             />
             {/* 吹き出しのしっぽ（左側のペンギンへ向ける） */}
-            <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-[3px] border-l-[3px] border-[#389E95] rotate-[25deg] -translate-y-1/2"></div>
+            <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-[3px] border-l-[3px] border-[#389E95] rotate-25 -translate-y-1/2"></div>
           </div>
         </div>
 

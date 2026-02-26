@@ -1,14 +1,44 @@
 "use client";
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 function GroupsHomeContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [userAvatarId, setUserAvatarId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        router.replace('/login');
+        return;
+      }
+
+      const avatar = data.user.user_metadata?.avatar;
+      if (typeof avatar === 'number' || typeof avatar === 'string') {
+        setUserAvatarId(String(avatar));
+      }
+
+      setAuthChecked(true);
+    };
+
+    void checkAuth();
+  }, [router]);
+
+  if (!authChecked) {
+    return <main className="min-h-screen bg-[#D6F8C2]" />;
+  }
+
   // 登録画面から渡されたアバター番号を取得（デフォルトは1）
-  const avatarId = searchParams.get('avatar') || '1';
+  const avatarId = userAvatarId || searchParams.get('avatar') || '1';
 
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
@@ -44,17 +74,17 @@ function GroupsHomeContent() {
       </header>
 
       {/* 🐾 【足跡・ボタン配置エリア：400x691】 */}
-      <div className="relative z-10 w-[400px] h-[691px] flex flex-col items-center justify-center">
+      <div className="relative z-10 w-100 h-172.75 flex flex-col items-center justify-center">
         
         {/* --- 背景の足跡レイヤー：位置をUI通りに微調整 --- */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           {/* 右上の足跡：下端がペンギンのすぐ上に来るように配置 */}
-          <div className="absolute bottom-[380px] -right-10 w-[320px] h-[320px] opacity-30">
+          <div className="absolute bottom-95 -right-10 w-80 h-80 opacity-30">
             <Image src="/足跡右上.svg" alt="" fill className="object-contain" />
           </div>
 
           {/* 左下の足跡：ペンギンの足元から画面外へ流れるように配置 */}
-          <div className="absolute top-[350px] -left-12 w-[340px] h-[340px] opacity-30">
+          <div className="absolute top-87.5 -left-12 w-85 h-85 opacity-30">
             <Image src="/足跡左下.svg" alt="" fill className="object-contain" />
           </div>
         </div>
@@ -63,10 +93,10 @@ function GroupsHomeContent() {
         <div className="relative z-10 w-full h-full flex flex-col items-center justify-center gap-16">
           
           {/* 1. グループ作成エリア */}
-          <div className="relative w-full flex justify-center max-w-[340px] pr-10">
-            <Link href="/groups/create" className="relative bg-white border-[4px] border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
+          <div className="relative w-full flex justify-center max-w-85 pr-10">
+            <Link href="/groups/create" className="relative bg-white border-4 border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
               <span className="text-[#389E95] text-xl font-bold">グループ作成</span>
-              <div className="absolute top-1/2 -right-3 w-6 h-6 bg-white border-t-[4px] border-r-[4px] border-[#389E95] rotate-[25deg] -translate-y-1/2"></div>
+              <div className="absolute top-1/2 -right-3 w-6 h-6 bg-white border-t-4 border-r-4 border-[#389E95] rotate-25 -translate-y-1/2"></div>
             </Link>
             {/* 右のペンギン（大） */}
             <div className="absolute -right-4 -bottom-4 w-32 h-32">
@@ -75,14 +105,14 @@ function GroupsHomeContent() {
           </div>
 
           {/* 2. グループに入るエリア */}
-          <div className="relative w-full flex justify-center max-w-[340px] pl-10">
+          <div className="relative w-full flex justify-center max-w-85 pl-10">
             {/* 左のペンギン（小） */}
             <div className="absolute -left-4 -top-8 w-28 h-28">
               <Image src="/小さいペンギン白 1.svg" alt="ペンギン小" width={112} height={112} className="object-contain" />
             </div>
-            <Link href="/groups/search" className="relative bg-white border-[4px] border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
+            <Link href="/groups/search" className="relative bg-white border-4 border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
               <span className="text-[#389E95] text-xl font-bold">グループに入る</span>
-              <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-[4px] border-l-[4px] border-[#389E95] rotate-[25deg] -translate-y-1/2"></div>
+              <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-4 border-l-4 border-[#389E95] rotate-25 -translate-y-1/2"></div>
             </Link>
           </div>
 
