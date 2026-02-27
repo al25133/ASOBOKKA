@@ -4,14 +4,27 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AccountMenu } from "@/components/ui/account-menu";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { HeaderHamburger } from "@/components/ui/account-menu";
+import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const areaOptions = ["渋谷", "新宿", "池袋", "上野", "横浜"];
 const purposeOptions = ["ごはん", "カフェ", "観光", "ショッピング", "アクティビティ"];
-const valueOptions = ["コスパ重視", "雰囲気重視", "アクセス重視", "新規性重視", "ゆったり重視"];
+const spendingStyleOptions = ["ゆったり", "アクティブ", "のんびり", "食べ歩き", "おまかせ"];
+const distanceOptions = ["徒歩圏", "電車1駅", "電車2〜3駅", "30分以内", "どこでも"];
+const crowdOptions = ["とても少なめ", "少なめ", "ふつう", "にぎやか", "とてもにぎやか"];
+const timeOptions = ["1時間以内", "2時間くらい", "3時間くらい", "半日", "終日"];
+const progressSteps = ["ホーム", "場所", "目的", "条件"] as const;
+
+type ConditionSelection = {
+	spendingStyle: string;
+	distance: string;
+	crowd: string;
+	time: string;
+	budget: number;
+};
 
 type MemberRow = {
 	user_id: string;
@@ -62,6 +75,7 @@ export default function GroupRoom() {
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
 	const [avatarId, setAvatarId] = useState("1");
+	const [showGroupInfo, setShowGroupInfo] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
@@ -70,8 +84,15 @@ export default function GroupRoom() {
 	const [members, setMembers] = useState<MemberRow[]>([]);
 	const [area, setArea] = useState("");
 	const [purpose, setPurpose] = useState("");
-	const [value, setValue] = useState("");
-	const redirectedToResultRef = useRef(false);
+	const [condition, setCondition] = useState<ConditionSelection>({
+		spendingStyle: "",
+		distance: "",
+		crowd: "",
+		time: "",
+		budget: 5000,
+	});
+	const [currentStep, setCurrentStep] = useState(0);
+	const [isWaiting, setIsWaiting] = useState(false);
 	const passcode = params.id;
 
 	const fetchMembers = useCallback(
@@ -168,22 +189,42 @@ export default function GroupRoom() {
 	}, [fetchMembers, groupId]);
 
 	const allReady = useMemo(() => members.length > 0 && members.every((member) => member.is_ready), [members]);
-
-	useEffect(() => {
-		if (allReady && !redirectedToResultRef.current) {
-			redirectedToResultRef.current = true;
-			router.push(`/groups/${passcode}/result`);
+	const progressPercent = useMemo(() => {
+		if (progressSteps.length <= 1) {
+			return 0;
 		}
-	}, [allReady, passcode, router]);
+		return (currentStep / (progressSteps.length - 1)) * 100;
+	}, [currentStep]);
+	const isConditionComplete = useMemo(
+		() => Boolean(condition.spendingStyle && condition.distance && condition.crowd && condition.time),
+		[condition],
+	);
+	const conditionValue = useMemo(
+		() =>
+			`過ごし方:${condition.spendingStyle} / 距離:${condition.distance} / 人の多さ:${condition.crowd} / 時間:${condition.time} / 予算:${condition.budget}円`,
+		[condition],
+	);
+	const waitingPhase = useMemo(() => {
+		if (!isWaiting) {
+			return "form" as const;
+		}
+		return allReady ? ("result" as const) : ("waiting" as const);
+	}, [allReady, isWaiting]);
+	const headerAvatars = useMemo(() => {
+		if (members.length === 0) {
+			return [avatarId];
+		}
+		return members.slice(0, 3).map((member) => member.avatar);
+	}, [avatarId, members]);
 
 	const saveSelection = async (ready: boolean) => {
 		const supabase = getSupabaseClient();
 		if (!groupId || !userId) {
-			return;
+			return false;
 		}
-		if (!area || !purpose || !value) {
-			setMessage("エリア・目的・価値観をすべて選択してください。");
-			return;
+		if (!area || !purpose || !isConditionComplete) {
+			setMessage("場所・目的・条件をすべて選択してください。");
+			return false;
 		}
 
 		setSaving(true);
@@ -194,7 +235,7 @@ export default function GroupRoom() {
 				user_id: userId,
 				selected_area: area,
 				selected_purpose: purpose,
-				selected_value: value,
+				selected_value: conditionValue,
 				is_ready: ready,
 			},
 			{ onConflict: "group_id,user_id" },
@@ -203,11 +244,46 @@ export default function GroupRoom() {
 
 		if (error) {
 			setMessage(error.message);
-			return;
+			return false;
 		}
 
 		await fetchMembers(groupId);
-		setMessage(ready ? "待機完了にしました。全員完了で結果画面へ遷移します。" : "選択内容を保存しました。");
+		setMessage(ready ? null : "選択内容を保存しました。");
+		return true;
+	};
+
+	const handleNext = async () => {
+		if (currentStep === 1 && !area) {
+			setMessage("場所を選択してください。");
+			return;
+		}
+		if (currentStep === 2 && !purpose) {
+			setMessage("目的を選択してください。");
+			return;
+		}
+		if (currentStep === 3) {
+			if (!isConditionComplete) {
+				setMessage("条件を選択してください。");
+				return;
+			}
+			const saved = await saveSelection(true);
+			if (saved) {
+				setMessage(null);
+				setIsWaiting(true);
+			}
+			return;
+		}
+
+		setMessage(null);
+		setCurrentStep((prev) => Math.min(prev + 1, progressSteps.length - 1));
+	};
+
+	const handleBack = () => {
+		if (currentStep === 0) {
+			return;
+		}
+		setMessage(null);
+		setCurrentStep((prev) => Math.max(prev - 1, 0));
 	};
 
 	if (loading) {
@@ -216,53 +292,178 @@ export default function GroupRoom() {
 
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
-			<div className="relative z-20 flex justify-center py-4 w-full">
-				<Link href="/" className="active:scale-95 transition-transform">
-					<Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
-				</Link>
-			</div>
+			<TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
 
-			<header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-				<Link href="/" className="active:scale-90 transition-transform">
-					<Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
-				</Link>
-				<AccountMenu avatarId={avatarId} />
-			</header>
+			<HomeHeaderBar
+				rightSlot={
+					<div className="relative">
+						<button
+							type="button"
+							onClick={() => setShowGroupInfo((prev) => !prev)}
+							className="flex items-center"
+							aria-label="グループ情報を表示"
+						>
+							{headerAvatars.map((avatar, index) => (
+								<div
+									key={`${avatar}-${index}`}
+									className={cn(
+										"relative h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-white",
+										index > 0 && "-ml-2",
+									)}
+								>
+									<Image src={`/avatars/avatar${avatar}.svg`} alt="チームメイトアイコン" fill className="object-contain" />
+								</div>
+							))}
+						</button>
+						{showGroupInfo ? (
+							<div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#389E95]/20 bg-white p-3 shadow-lg">
+								<p className="text-xs font-bold text-[#389E95]">グループ番号</p>
+								<p className="text-xl font-bold tracking-widest text-[#5A5A5A]">{passcode}</p>
+								<div className="mt-3 border-t border-[#389E95]/10 pt-2">
+									<p className="mb-1 text-xs font-bold text-[#389E95]">アカウント</p>
+									<Link
+										href="/account/settings"
+										onClick={() => setShowGroupInfo(false)}
+										className="block rounded-lg px-2 py-1.5 text-sm text-[#5A5A5A] hover:bg-[#F0FAED]"
+									>
+										アカウント設定
+									</Link>
+								</div>
+							</div>
+						) : null}
+					</div>
+				}
+			/>
 
 			<div className="relative z-10 w-full max-w-112.5 px-6 pt-8 pb-12 space-y-6">
-				<section className="bg-white rounded-[30px] border-2 border-[#389E95]/40 p-5 shadow-sm">
-					<p className="text-[#389E95] text-xs font-bold mb-1">グループ番号</p>
-					<p className="text-[#5A5A5A] text-4xl font-bold tracking-widest">{passcode}</p>
-					<p className="text-[#389E95] text-xs mt-2">選択内容はリアルタイムで同期されます。</p>
-				</section>
-
 				<div className="grid gap-6 md:grid-cols-[1fr_320px]">
-					<section className="space-y-5 bg-white rounded-[30px] p-5 border border-[#389E95]/20 shadow-sm">
-						<OptionGroup title="エリア" options={areaOptions} value={area} onSelect={setArea} />
-						<OptionGroup title="目的" options={purposeOptions} value={purpose} onSelect={setPurpose} />
-						<OptionGroup title="価値観" options={valueOptions} value={value} onSelect={setValue} />
+					<section
+						className={cn(
+							"space-y-5 p-5",
+							waitingPhase === "form" && "bg-white rounded-[30px] border border-[#389E95]/20 shadow-sm",
+						)}
+					>
+						{waitingPhase === "waiting" ? (
+							<section className="p-5">
+								<div className="min-h-90 flex flex-col items-center justify-center pt-30">
+									<div>
+										<Image src="/足跡上.svg" alt="足跡" width={120} height={90} className="object-contain" />
+									</div>
+									<div className="mt-4">
+										<Image src="/待機中.svg" alt="待機中" width={180} height={180} className="object-contain" />
+									</div>
+									<p className="mt-4 text-base font-bold text-[#5A7C55]">待機しています</p>
+								</div>
+							</section>
+						) : waitingPhase === "result" ? (
+							<section className="p-5">
+								<div className="min-h-90 flex flex-col items-center justify-center pt-30">
+									<div>
+										<Image src="/足跡上.svg" alt="足跡" width={120} height={90} className="object-contain" />
+									</div>
+									<div className="mt-4">
+										<Image src="/待機完了.svg" alt="待機完了" width={180} height={180} className="object-contain" />
+									</div>
+									<p className="mt-3 text-base font-bold text-[#5A7C55]">お待たせしました！</p>
+									<button
+										type="button"
+										onClick={() => router.push(`/groups/${passcode}/result`)}
+										className="mt-4 w-full max-w-72 bg-[#52A399] text-white font-bold py-3 rounded-2xl shadow-lg active:scale-95 transition-all"
+									>
+										結果を見る
+									</button>
+								</div>
+							</section>
+						) : (
+							<>
+						<div className="space-y-2">
+							<div className="h-3 w-full overflow-hidden rounded-full bg-[#EAF7F4]" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressPercent)}>
+								<div className="h-full rounded-full bg-[#52A399] transition-all" style={{ width: `${progressPercent}%` }} />
+							</div>
+							<div className="grid grid-cols-4 gap-2 text-center text-xs font-bold text-[#6D8D69]">
+								{progressSteps.map((step, index) => (
+									<p key={step} className={cn(index <= currentStep && "text-[#389E95]")}>{step}</p>
+								))}
+							</div>
+						</div>
 
-						<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 pt-2">
+						{currentStep === 0 ? (
+							<section className="rounded-2xl border border-[#389E95]/20 bg-[#F9FBF9] p-4">
+								<h2 className="text-sm font-bold text-[#5A7C55] mb-2">ホーム</h2>
+								<p className="text-sm text-[#5A5A5A] leading-relaxed">
+									下の「次へ」から、場所→目的→条件の順で選択してください。最後の「次へ」で待機完了になります。
+								</p>
+							</section>
+						) : null}
+
+						{currentStep === 1 ? <OptionGroup title="場所" options={areaOptions} value={area} onSelect={setArea} /> : null}
+						{currentStep === 2 ? <OptionGroup title="目的" options={purposeOptions} value={purpose} onSelect={setPurpose} /> : null}
+						{currentStep === 3 ? (
+							<div className="space-y-4">
+								<OptionGroup
+									title="過ごし方"
+									options={spendingStyleOptions}
+									value={condition.spendingStyle}
+									onSelect={(next) => setCondition((prev) => ({ ...prev, spendingStyle: next }))}
+								/>
+								<OptionGroup
+									title="距離"
+									options={distanceOptions}
+									value={condition.distance}
+									onSelect={(next) => setCondition((prev) => ({ ...prev, distance: next }))}
+								/>
+								<OptionGroup
+									title="人の多さ"
+									options={crowdOptions}
+									value={condition.crowd}
+									onSelect={(next) => setCondition((prev) => ({ ...prev, crowd: next }))}
+								/>
+								<OptionGroup
+									title="時間"
+									options={timeOptions}
+									value={condition.time}
+									onSelect={(next) => setCondition((prev) => ({ ...prev, time: next }))}
+								/>
+								<section className="space-y-2">
+									<h2 className="text-sm font-bold text-[#5A7C55]">予算</h2>
+									<input
+										type="range"
+										min={0}
+										max={100000}
+										step={1000}
+										value={condition.budget}
+										onChange={(event) => setCondition((prev) => ({ ...prev, budget: Number(event.target.value) }))}
+										className="w-full accent-[#52A399]"
+									/>
+									<p className="text-sm font-semibold text-[#389E95]">{condition.budget.toLocaleString()}円</p>
+								</section>
+							</div>
+						) : null}
+
+						<div className="grid grid-cols-2 gap-2 pt-2">
 							<button
 								type="button"
-								disabled={saving}
-								onClick={() => void saveSelection(false)}
+								disabled={saving || currentStep === 0}
+								onClick={handleBack}
 								className="w-full bg-white border-2 border-[#52A399]/40 text-[#389E95] font-bold py-3 rounded-2xl shadow-sm active:scale-95 transition-all disabled:opacity-70"
 							>
-								選択を保存
+								戻る
 							</button>
 							<button
 								type="button"
 								disabled={saving}
-								onClick={() => void saveSelection(true)}
+								onClick={() => void handleNext()}
 								className="w-full bg-[#52A399] text-white font-bold py-3 rounded-2xl shadow-lg active:scale-95 transition-all disabled:opacity-70"
 							>
-								待機完了
+								{currentStep === 3 ? "結果表示" : "次へ"}
 							</button>
 						</div>
-						{message ? <p className="text-sm text-[#5A5A5A]">{message}</p> : null}
+							</>
+						)}
+						{!isWaiting && message ? <p className="text-sm text-[#5A5A5A]">{message}</p> : null}
 					</section>
 
+					{isWaiting ? null : (
 					<aside className="bg-white rounded-[30px] p-5 border border-[#389E95]/20 shadow-sm">
 						<h2 className="mb-3 text-sm font-bold text-[#5A7C55]">メンバー状況</h2>
 						<ul className="space-y-2">
@@ -276,12 +477,13 @@ export default function GroupRoom() {
 									</div>
 									<p className="text-[#6D8D69]">エリア: {member.selected_area ?? "未選択"}</p>
 									<p className="text-[#6D8D69]">目的: {member.selected_purpose ?? "未選択"}</p>
-									<p className="text-[#6D8D69]">価値観: {member.selected_value ?? "未選択"}</p>
+									<p className="text-[#6D8D69]">条件: {member.selected_value ?? "未選択"}</p>
 									<p className={member.is_ready ? "text-emerald-600" : "text-[#6D8D69]"}>{member.is_ready ? "待機完了" : "入力中"}</p>
 								</li>
 							))}
 						</ul>
 					</aside>
+					)}
 				</div>
 			</div>
 		</main>
