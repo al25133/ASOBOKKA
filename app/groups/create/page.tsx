@@ -129,7 +129,7 @@ export default function GroupCreate() {
 
       {/* 🟢 ヘッダーバー */}
       <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-        <Link href="/groups" className="active:scale-90 transition-transform">
+        <Link href="/" className="active:scale-90 transition-transform">
           <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
         </Link>
         <AccountMenu avatarId={avatarId} />
@@ -184,10 +184,10 @@ export default function GroupCreate() {
 
       {/* 🔘 下部ナビゲーション */}
       <div className="fixed bottom-10 z-40 w-full max-w-90 bg-[#52A399] rounded-[30px] p-3 shadow-lg flex justify-between gap-3 mx-auto">
-        <Link href="/groups" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
+        <Link href="/" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
           <span className="text-[#389E95] font-bold">戻る</span>
         </Link>
-        <Link href={groupCode ? `/groups/${groupCode}` : '/groups'} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
+        <Link href={groupCode ? `/groups/${groupCode}` : '/'} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
           <span className="text-[#389E95] font-bold">次へ</span>
         </Link>
       </div>

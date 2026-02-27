@@ -223,7 +223,7 @@ export default function GroupRoom() {
 			</div>
 
 			<header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-				<Link href="/groups" className="active:scale-90 transition-transform">
+				<Link href="/" className="active:scale-90 transition-transform">
 					<Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
 				</Link>
 				<AccountMenu avatarId={avatarId} />

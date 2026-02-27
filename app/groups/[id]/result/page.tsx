@@ -70,7 +70,7 @@ export default function GroupResult() {
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
 			<div className="pt-8 pb-5">
-				<Link href="/groups" className="active:scale-95 transition-transform inline-block">
+				<Link href="/" className="active:scale-95 transition-transform inline-block">
 					<Image src="/loginlogo.svg" alt="あそぼっか ロゴ" width={150} height={75} priority className="object-contain" />
 				</Link>
 			</div>

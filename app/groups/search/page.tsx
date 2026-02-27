@@ -64,7 +64,7 @@ export default function GroupSearch() {
 
       {/* 🟢 ヘッダーバー：ブランドカラー #389E95 */}
       <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-        <Link href="/groups" className="active:scale-90 transition-transform">
+        <Link href="/" className="active:scale-90 transition-transform">
           <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
         </Link>
         <AccountMenu avatarId={avatarId} />
@@ -106,7 +106,7 @@ export default function GroupSearch() {
           {message ? <p className="text-sm text-red-600">{message}</p> : null}
           
           <Link 
-            href="/groups"
+            href="/"
             className="w-32 bg-white border-2 border-[#52A399]/30 text-[#52A399] font-bold py-2 rounded-xl text-center shadow-sm active:scale-95 transition-all"
           >
             戻る
