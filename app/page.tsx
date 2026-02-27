@@ -37,25 +37,6 @@ function GroupsHomeContent() {
     void checkAuth();
   }, [router]);
 
-  useEffect(() => {
-    if (authState !== 'authed') {
-      return;
-    }
-
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-      (typeof window.navigator !== 'undefined' && 'standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
-
-    if (!isStandalone) {
-      return;
-    }
-
-    const splashShown = sessionStorage.getItem('asobokka-pwa-splash-shown');
-    if (!splashShown) {
-      sessionStorage.setItem('asobokka-pwa-splash-shown', '1');
-      router.replace('/splash');
-    }
-  }, [authState, router]);
-
   if (authState === 'checking') {
     return (
       <main className="min-h-screen bg-[#D6F8C2] flex items-center justify-center">
