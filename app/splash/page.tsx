@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { AccountMenu } from '@/components/ui/account-menu';
 
-export default function SplashPage() {
+function SplashPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [authState, setAuthState] = useState<'checking' | 'authed' | 'guest'>('checking');
@@ -99,5 +99,13 @@ export default function SplashPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SplashPage() {
+  return (
+    <Suspense fallback={null}>
+      <SplashPageContent />
+    </Suspense>
   );
 }
