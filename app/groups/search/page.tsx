@@ -91,7 +91,7 @@ export default function GroupSearch() {
               className="w-full text-center text-3xl font-bold text-[#5A5A5A] outline-none placeholder:text-[#BABABA] placeholder:text-sm placeholder:font-normal"
             />
             {/* 吹き出しのしっぽ（左側のペンギンへ向ける） */}
-            <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-[3px] border-l-[3px] border-[#389E95] rotate-25 -translate-y-1/2"></div>
+            <div className="absolute top-[52%] -left-3 w-5 h-5 bg-white border-b-[3px] border-l-[3px] border-[#389E95] rotate-45 -translate-y-1/2"></div>
           </div>
         </div>
 

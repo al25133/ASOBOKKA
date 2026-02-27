@@ -146,7 +146,7 @@ export default function GroupCreate() {
             <p className="text-[#389E95] text-[10px] font-bold text-right">みんなに教えてね！</p>
             
             {/* ✨ しっぽの位置調整：ペンギンが下がったので、しっぽも少し下に下げました */}
-            <div className="absolute top-[75%] -right-3 w-6 h-6 bg-white border-t-[3px] border-r-[3px] border-[#389E95] rotate-30 -translate-y-1/2"></div>
+            <div className="absolute top-[77%] -right-3 w-5 h-5 bg-white border-t-[3px] border-r-[3px] border-[#389E95] rotate-45 -translate-y-1/2"></div>
           </div>
           
           {/* ✨ ペンギンの位置：-bottom-16 から -bottom-28 まで大幅に下げました */}

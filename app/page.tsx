@@ -116,7 +116,7 @@ function GroupsHomeContent() {
           <div className="relative w-full flex justify-center max-w-85 pr-10">
             <Link href="/groups/create" className="relative bg-white border-4 border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
               <span className="text-[#389E95] text-xl font-bold">グループ作成</span>
-              <div className="absolute top-1/2 -right-3 w-6 h-6 bg-white border-t-4 border-r-4 border-[#389E95] rotate-25 -translate-y-1/2"></div>
+              <div className="absolute top-[52%] -right-3 w-5 h-5 bg-white border-t-4 border-r-4 border-[#389E95] rotate-45 -translate-y-1/2"></div>
             </Link>
             {/* 右のペンギン（大） */}
             <div className="absolute -right-4 -bottom-4 w-32 h-32">
@@ -132,7 +132,7 @@ function GroupsHomeContent() {
             </div>
             <Link href="/groups/search" className="relative bg-white border-4 border-[#389E95] rounded-[25px] px-10 py-5 shadow-lg active:scale-95 transition-all">
               <span className="text-[#389E95] text-xl font-bold">グループに入る</span>
-              <div className="absolute top-1/2 -left-3 w-6 h-6 bg-white border-b-4 border-l-4 border-[#389E95] rotate-25 -translate-y-1/2"></div>
+              <div className="absolute top-[52%] -left-3 w-5 h-5 bg-white border-b-4 border-l-4 border-[#389E95] rotate-45 -translate-y-1/2"></div>
             </Link>
           </div>
 
