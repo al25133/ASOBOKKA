@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { AccountMenu } from '@/components/ui/account-menu';
+import { AccountMenu, HeaderHamburger } from '@/components/ui/account-menu';
+import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
+import { FootprintsStage } from '@/components/ui/decorative-layout';
 
 function GroupsHomeContent() {
   const router = useRouter();
@@ -73,39 +75,14 @@ function GroupsHomeContent() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
       {/* 🐧 ロゴエリア（最上部） */}
-      <div className="relative z-20 flex justify-center py-4 w-full bg-[#D6F8C2]">
-        <Link href="/" className="active:scale-95 transition-transform">
-          <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
-        </Link>
-      </div>
+      <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} className="bg-[#D6F8C2]" />
 
       {/* 🟢 ヘッダーバー：選択したアイコンを表示 */}
-      <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-        <Link href="/" className="active:scale-90 transition-transform">
-          <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
-        </Link>
-        
-        <AccountMenu avatarId={avatarId} />
-      </header>
+      <HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
 
       {/* 🐾 【足跡・ボタン配置エリア：400x691】 */}
-      <div className="relative z-10 w-100 h-172.75 flex flex-col items-center justify-center">
-        
-        {/* --- 背景の足跡レイヤー：位置をUI通りに微調整 --- */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {/* 右上の足跡：下端がペンギンのすぐ上に来るように配置 */}
-          <div className="absolute bottom-95 -right-10 w-80 h-80 opacity-30">
-            <Image src="/足跡右上.svg" alt="" fill className="object-contain" />
-          </div>
-
-          {/* 左下の足跡：ペンギンの足元から画面外へ流れるように配置 */}
-          <div className="absolute top-87.5 -left-12 w-85 h-85 opacity-30">
-            <Image src="/足跡左下.svg" alt="" fill className="object-contain" />
-          </div>
-        </div>
-
-        {/* --- コンテンツレイヤー --- */}
-        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center gap-16">
+      <FootprintsStage>
+        <div className="flex flex-col items-center justify-center h-full gap-16">
           
           {/* 1. グループ作成エリア */}
           <div className="relative w-full flex justify-center max-w-85 pr-10">
@@ -132,7 +109,7 @@ function GroupsHomeContent() {
           </div>
 
         </div>
-      </div>
+      </FootprintsStage>
     </main>
   );
 }

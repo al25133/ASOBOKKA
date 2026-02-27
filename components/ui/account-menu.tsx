@@ -10,6 +10,21 @@ interface AccountMenuProps {
   avatarId: string;
 }
 
+interface HeaderHamburgerProps {
+  className?: string;
+  colorClassName?: string;
+}
+
+export function HeaderHamburger({ className = '', colorClassName = 'bg-white' }: HeaderHamburgerProps) {
+  return (
+    <div className={`flex flex-col gap-1 w-7 ${className}`.trim()} aria-hidden="true">
+      <div className={`h-0.5 w-full rounded-full ${colorClassName}`}></div>
+      <div className={`h-0.5 w-full rounded-full ${colorClassName}`}></div>
+      <div className={`h-0.5 w-full rounded-full ${colorClassName}`}></div>
+    </div>
+  );
+}
+
 const menuItems = [
   { href: '/account/settings', label: 'アカウント設定' },
   { href: '/account/settings#icon', label: 'アイコン変更' },
@@ -71,17 +86,13 @@ export function AccountMenu({ avatarId }: AccountMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((previous) => !previous)}
-        className="flex items-center gap-3 rounded-full px-1 py-0.5 active:scale-95 transition-transform"
+        className="rounded-full p-0.5 active:scale-95 transition-transform"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label="アカウント設定を開く"
       >
         <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-sm">
           <Image src={`/avatars/avatar${avatarId}.svg`} alt="マイアイコン" width={36} height={36} />
-        </div>
-        <div className="flex flex-col gap-1 w-7 cursor-pointer">
-          <div className="h-0.5 w-full bg-white rounded-full"></div>
-          <div className="h-0.5 w-full bg-white rounded-full"></div>
-          <div className="h-0.5 w-full bg-white rounded-full"></div>
         </div>
       </button>
 

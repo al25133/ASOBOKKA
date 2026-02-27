@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { AccountMenu } from '@/components/ui/account-menu';
+import { AccountMenu, HeaderHamburger } from '@/components/ui/account-menu';
+import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
+import { BottomCurveBackground } from '@/components/ui/decorative-layout';
 
 export default function GroupSearch() {
   const router = useRouter();
@@ -56,19 +58,10 @@ export default function GroupSearch() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
       {/* 🐧 ロゴエリア */}
-      <div className="relative z-20 flex justify-center py-4 w-full">
-        <Link href="/" className="active:scale-95 transition-transform">
-          <Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
-        </Link>
-      </div>
+      <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
 
       {/* 🟢 ヘッダーバー：ブランドカラー #389E95 */}
-      <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-        <Link href="/" className="active:scale-90 transition-transform">
-          <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
-        </Link>
-        <AccountMenu avatarId={avatarId} />
-      </header>
+      <HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
 
       {/* 🐾 メインコンテンツ：ペンギンと入力吹き出し */}
       <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-32 px-10 pb-40">
@@ -115,7 +108,7 @@ export default function GroupSearch() {
       </div>
 
       {/* ⚪️ 下部の白い曲線背景 */}
-      <div className="fixed bottom-0 left-0 w-full h-40 bg-white rounded-t-[100px] z-0 pointer-events-none"></div>
+      <BottomCurveBackground className="h-40 rounded-t-[100px]" />
 
     </main>
   );

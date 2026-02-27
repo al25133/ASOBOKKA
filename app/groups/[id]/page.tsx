@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { HeaderHamburger } from "@/components/ui/account-menu";
+import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -290,43 +292,48 @@ export default function GroupRoom() {
 
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
-			<div className="relative z-20 flex justify-center py-4 w-full">
-				<Link href="/" className="active:scale-95 transition-transform">
-					<Image src="/loginlogo.svg" alt="ロゴ" width={100} height={50} className="object-contain" />
-				</Link>
-			</div>
+			<TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
 
-			<header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-				<Link href="/" className="active:scale-90 transition-transform">
-					<Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
-				</Link>
-				<div className="relative">
-					<button
-						type="button"
-						onClick={() => setShowGroupInfo((prev) => !prev)}
-						className="flex items-center"
-						aria-label="グループ情報を表示"
-					>
-						{headerAvatars.map((avatar, index) => (
-							<div
-								key={`${avatar}-${index}`}
-								className={cn(
-									"relative h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-white",
-									index > 0 && "-ml-2",
-								)}
-							>
-								<Image src={`/avatars/avatar${avatar}.svg`} alt="チームメイトアイコン" fill className="object-contain" />
+			<HomeHeaderBar
+				rightSlot={
+					<div className="relative">
+						<button
+							type="button"
+							onClick={() => setShowGroupInfo((prev) => !prev)}
+							className="flex items-center"
+							aria-label="グループ情報を表示"
+						>
+							{headerAvatars.map((avatar, index) => (
+								<div
+									key={`${avatar}-${index}`}
+									className={cn(
+										"relative h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-white",
+										index > 0 && "-ml-2",
+									)}
+								>
+									<Image src={`/avatars/avatar${avatar}.svg`} alt="チームメイトアイコン" fill className="object-contain" />
+								</div>
+							))}
+						</button>
+						{showGroupInfo ? (
+							<div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#389E95]/20 bg-white p-3 shadow-lg">
+								<p className="text-xs font-bold text-[#389E95]">グループ番号</p>
+								<p className="text-xl font-bold tracking-widest text-[#5A5A5A]">{passcode}</p>
+								<div className="mt-3 border-t border-[#389E95]/10 pt-2">
+									<p className="mb-1 text-xs font-bold text-[#389E95]">アカウント</p>
+									<Link
+										href="/account/settings"
+										onClick={() => setShowGroupInfo(false)}
+										className="block rounded-lg px-2 py-1.5 text-sm text-[#5A5A5A] hover:bg-[#F0FAED]"
+									>
+										アカウント設定
+									</Link>
+								</div>
 							</div>
-						))}
-					</button>
-					{showGroupInfo ? (
-						<div className="absolute right-0 mt-2 w-40 rounded-2xl border border-[#389E95]/20 bg-white p-3 shadow-lg">
-							<p className="text-xs font-bold text-[#389E95]">グループ番号</p>
-							<p className="text-xl font-bold tracking-widest text-[#5A5A5A]">{passcode}</p>
-						</div>
-					) : null}
-				</div>
-			</header>
+						) : null}
+					</div>
+				}
+			/>
 
 			<div className="relative z-10 w-full max-w-112.5 px-6 pt-8 pb-12 space-y-6">
 				<div className="grid gap-6 md:grid-cols-[1fr_320px]">
