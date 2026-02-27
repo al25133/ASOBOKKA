@@ -12,6 +12,7 @@ function GroupsHomeContent() {
   const searchParams = useSearchParams();
   const [authState, setAuthState] = useState<'checking' | 'authed' | 'guest'>('checking');
   const [userAvatarId, setUserAvatarId] = useState<string | null>(null);
+  const [splashChecked, setSplashChecked] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,7 +36,30 @@ function GroupsHomeContent() {
     void checkAuth();
   }, [router]);
 
-  if (authState === 'checking') {
+  useEffect(() => {
+    if (authState !== 'authed' || splashChecked) {
+      return;
+    }
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (typeof window.navigator !== 'undefined' && 'standalone' in window.navigator && Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
+
+    if (!isStandalone) {
+      setSplashChecked(true);
+      return;
+    }
+
+    const splashShown = sessionStorage.getItem('asobokka-pwa-splash-shown');
+    if (!splashShown) {
+      sessionStorage.setItem('asobokka-pwa-splash-shown', '1');
+      router.replace('/splash');
+      return;
+    }
+
+    setSplashChecked(true);
+  }, [authState, splashChecked, router]);
+
+  if (authState === 'checking' || !splashChecked) {
     return (
       <main className="min-h-screen bg-[#D6F8C2] flex items-center justify-center">
         <p className="text-[#389E95] font-bold">読み込み中...</p>
