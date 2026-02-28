@@ -508,7 +508,7 @@ export default function GroupSuggestionPage() {
 									gridTemplateColumns: "minmax(0,1fr) minmax(0,clamp(300px,calc(100vw - 136px),542px)) minmax(0,1fr)",
 								}}
 							>
-								<div ref={leftPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-l-3xl">
+								<div ref={leftPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-r-3xl">
 									<div className="absolute top-0 right-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
 										<SuggestionCardCanvas card={prevCard} cardNumber={prevCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
@@ -526,7 +526,7 @@ export default function GroupSuggestionPage() {
 									</div>
 								</article>
 
-								<div ref={rightPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-r-3xl">
+								<div ref={rightPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-l-3xl">
 									<div className="absolute top-0 left-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
 										<SuggestionCardCanvas card={nextCard} cardNumber={nextCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
