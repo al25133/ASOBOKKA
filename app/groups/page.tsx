@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
 // --- 💡 番号入力画面のメインコンテンツ ---
 function SearchContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const avatarId = searchParams.get('avatar') || '1';
   
   // 入力されたグループ番号
   const [groupCode, setGroupCode] = useState("");
@@ -18,7 +16,7 @@ function SearchContent() {
     e.preventDefault();
     if (groupCode.length > 0) {
       // 入力された番号を持って、メンバー一覧画面（createページ）へ
-      router.push(`/groups/create?avatar=${avatarId}&code=${groupCode}`);
+      router.push(`/groups/create?code=${groupCode}`);
     }
   };
 
@@ -55,7 +53,7 @@ function SearchContent() {
         </button>
         
         <Link 
-          href={`/groups?avatar=${avatarId}`}
+          href="/groups"
           className="w-32 bg-white border-2 border-[#52A399]/30 text-[#52A399] font-bold py-2 rounded-xl text-center shadow-sm active:scale-95 transition-all"
         >
           戻る
@@ -105,8 +103,7 @@ export default function SearchPage() {
 
 // アバターアイコン部分を分離して Suspense に対応
 function AvatarIcon() {
-  const searchParams = useSearchParams();
-  const avatarId = searchParams.get('avatar') || '1';
+  const avatarId = '1';
   return (
     <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-sm">
       <Image src={`/avatars/avatar${avatarId}.svg`} alt="" width={36} height={36} />

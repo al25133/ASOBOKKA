@@ -1,15 +1,10 @@
 "use client";
 
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
-type PurposeSelectionContentProps = {
-  avatarId: string;
-};
-
-function PurposeSelectionContent({ avatarId }: PurposeSelectionContentProps) {
+function PurposeSelectionContent() {
 
   // 📂 フォルダ名 /purpose/ 内のファイル名に一致させています
   const purposes = [
@@ -72,10 +67,10 @@ function PurposeSelectionContent({ avatarId }: PurposeSelectionContentProps) {
 
       {/* 🔘 ナビゲーション */}
       <div className="fixed bottom-10 z-40 w-full max-w-[360px] bg-[#52A399] rounded-[30px] p-3 shadow-2xl flex justify-between gap-3 mx-auto">
-        <Link href={`/groups/area?avatar=${avatarId}`} className="flex-1 bg-white rounded-2xl py-3 text-center active:scale-95 transition-all">
+        <Link href="/groups/area" className="flex-1 bg-white rounded-2xl py-3 text-center active:scale-95 transition-all">
           <span className="text-[#389E95] font-black tracking-widest text-sm">戻る</span>
         </Link>
-        <Link href={`/groups/condition?avatar=${avatarId}`} className="flex-1 bg-white rounded-2xl py-3 text-center active:scale-95 transition-all">
+        <Link href="/groups/condition" className="flex-1 bg-white rounded-2xl py-3 text-center active:scale-95 transition-all">
           <span className="text-[#389E95] font-black tracking-widest text-sm">次へ</span>
         </Link>
       </div>
@@ -85,9 +80,6 @@ function PurposeSelectionContent({ avatarId }: PurposeSelectionContentProps) {
 }
 
 function PurposePageContent() {
-  const searchParams = useSearchParams();
-  const avatarId = searchParams.get('avatar') || '1';
-
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden select-none">
       <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] mt-12 shadow-sm">
@@ -106,7 +98,7 @@ function PurposePageContent() {
           </div>
         </div>
       </header>
-      <PurposeSelectionContent avatarId={avatarId} />
+      <PurposeSelectionContent />
     </main>
   );
 }

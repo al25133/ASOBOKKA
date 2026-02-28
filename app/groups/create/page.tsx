@@ -5,9 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { AccountMenu, HeaderHamburger } from '@/components/ui/account-menu';
+import { HeaderHamburger } from '@/components/ui/account-menu';
 import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
 import { BottomCurveBackground } from '@/components/ui/decorative-layout';
+import { TeamMembersHeader } from '@/components/ui/team-members-header';
 
 type GroupMember = {
   user_id: string;
@@ -18,7 +19,6 @@ type GroupMember = {
 export default function GroupCreate() {
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
-  const [avatarId, setAvatarId] = useState('1');
   const [groupCode, setGroupCode] = useState('');
   const [groupId, setGroupId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -65,11 +65,6 @@ export default function GroupCreate() {
       }
 
       setUserId(data.user.id);
-
-      const avatar = data.user.user_metadata?.avatar;
-      if (typeof avatar === 'number' || typeof avatar === 'string') {
-        setAvatarId(String(avatar));
-      }
 
       const { data: createdGroup, error } = await supabase.rpc('create_group_with_unique_passcode');
       if (error || !createdGroup?.[0]) {
@@ -126,7 +121,7 @@ export default function GroupCreate() {
       <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
 
       {/* 🟢 ヘッダーバー */}
-      <HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
+      <HomeHeaderBar rightSlot={<TeamMembersHeader members={members} />} />
 
       {/* 🐾 メインコンテンツ */}
       <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-10 px-6 pb-40">
@@ -180,12 +175,8 @@ export default function GroupCreate() {
         <Link href="/" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
           <span className="text-[#389E95] font-bold">戻る</span>
         </Link>
-        {/* ✨ リンク先を /groups/area に変更！ */}
-        <Link href={`/groups/area?avatar=${avatarId}`} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
+        <Link href={groupCode ? `/groups/${groupCode}/area` : '/'} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
           <span className="text-[#389E95] font-bold">診断スタート</span>
-        </Link>
-        <Link href={groupCode ? `/groups/${groupCode}` : '/'} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
-          <span className="text-[#389E95] font-bold">次へ</span>
         </Link>
       </div>
 
