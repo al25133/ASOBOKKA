@@ -114,7 +114,7 @@ export default function Register() {
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="メールアドレス（半角英数字）" className="w-full px-6 py-4 rounded-2xl border border-gray-200 outline-none text-gray-700 placeholder:text-gray-300 focus:ring-2 focus:ring-[#52A399] bg-[#F9FBF9]" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-bold text-[#5A7C55] ml-2">パスワード</label>
+            <label className="text-sm font-bold text-[#5A7C55] ml-2">パスワード(6文字以上)</label>
             <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="半角英数字" className="w-full px-6 py-4 rounded-2xl border border-gray-200 outline-none text-gray-700 placeholder:text-gray-300 focus:ring-2 focus:ring-[#52A399] bg-[#F9FBF9]" />
           </div>
           <div className="space-y-2">
