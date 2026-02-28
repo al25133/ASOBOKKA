@@ -4,7 +4,6 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { HeaderHamburger } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -263,7 +262,7 @@ function GroupConditionPageContent() {
 
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden select-none">
-			<TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} className="bg-[#D6F8C2]" />
+			<TopLogoBar className="bg-[#D6F8C2]" />
 			<HomeHeaderBar rightSlot={<TeamMembersHeader passcode={params.id} />} />
 			<ConditionSelectionContent passcode={params.id} />
 		</main>

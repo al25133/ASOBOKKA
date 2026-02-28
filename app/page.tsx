@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { AccountMenu, HeaderHamburger } from '@/components/ui/account-menu';
+import { AccountMenu } from '@/components/ui/account-menu';
 import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
 import { FootprintsStage } from '@/components/ui/decorative-layout';
 
@@ -54,7 +54,7 @@ function GroupsHomeContent() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
       {/* 🐧 ロゴエリア（最上部） */}
-      <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} className="bg-[#D6F8C2]" />
+      <TopLogoBar className="bg-[#D6F8C2]" />
 
       {/* 🟢 ヘッダーバー：選択したアイコンを表示 */}
       <HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { AccountMenu, HeaderHamburger } from '@/components/ui/account-menu';
+import { AccountMenu } from '@/components/ui/account-menu';
 import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
 import { BottomCurveBackground } from '@/components/ui/decorative-layout';
 
@@ -58,7 +58,7 @@ export default function GroupSearch() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
       {/* 🐧 ロゴエリア */}
-      <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
+      <TopLogoBar />
 
       {/* 🟢 ヘッダーバー：ブランドカラー #389E95 */}
       <HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />

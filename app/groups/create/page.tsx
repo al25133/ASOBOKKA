@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { HeaderHamburger } from '@/components/ui/account-menu';
 import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
 import { BottomCurveBackground } from '@/components/ui/decorative-layout';
 import { TeamMembersHeader } from '@/components/ui/team-members-header';
@@ -118,7 +117,7 @@ export default function GroupCreate() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
       {/* 🐧 ロゴエリア */}
-      <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
+      <TopLogoBar />
 
       {/* 🟢 ヘッダーバー */}
       <HomeHeaderBar rightSlot={<TeamMembersHeader members={members} />} />

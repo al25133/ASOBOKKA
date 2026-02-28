@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { HeaderHamburger } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { BottomCurveBackground } from "@/components/ui/decorative-layout";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
@@ -118,7 +117,7 @@ export default function GroupRoomPage() {
 
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
-			<TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} />
+			<TopLogoBar />
 			<HomeHeaderBar rightSlot={<TeamMembersHeader members={members} />} />
 
 			<div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-10 px-6 pb-40">

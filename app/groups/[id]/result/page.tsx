@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { AccountMenu, HeaderHamburger } from "@/components/ui/account-menu";
+import { AccountMenu } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -487,7 +487,7 @@ export default function GroupResult() {
 			<div className="pointer-events-none absolute inset-0 z-10 bg-black/55" aria-hidden />
 
 			<div className="relative w-full">
-				<TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} className="bg-[#D6F8C2]" />
+				<TopLogoBar className="bg-[#D6F8C2]" />
 				<HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
 				<div className="pointer-events-none absolute inset-0 z-30 bg-black/35" aria-hidden />
 			</div>

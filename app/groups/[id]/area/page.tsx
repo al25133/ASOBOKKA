@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { HeaderHamburger } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -219,7 +218,7 @@ export default function GroupAreaPage() {
     const params = useParams<{ id: string }>();
     return (
         <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden">
-            <TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} className="bg-[#D6F8C2]" />
+            <TopLogoBar className="bg-[#D6F8C2]" />
             <HomeHeaderBar rightSlot={<TeamMembersHeader passcode={params.id} />} />
             <Suspense fallback={<div className="pt-20 text-[#389E95] font-bold">地図を広げています...</div>}>
                 <AreaSelectionContent passcode={params.id} />
