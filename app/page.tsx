@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
@@ -11,7 +11,6 @@ import { FootprintsStage } from '@/components/ui/decorative-layout';
 
 function GroupsHomeContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [authState, setAuthState] = useState<'checking' | 'authed' | 'guest'>('checking');
   const [userAvatarId, setUserAvatarId] = useState<string | null>(null);
 
@@ -49,8 +48,7 @@ function GroupsHomeContent() {
     return null;
   }
 
-  // 登録画面から渡されたアバター番号を取得（デフォルトは1）
-  const avatarId = userAvatarId || searchParams.get('avatar') || '1';
+  const avatarId = userAvatarId || '1';
 
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
