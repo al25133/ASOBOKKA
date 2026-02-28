@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { toPng } from "html-to-image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AccountMenu, HeaderHamburger } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -70,6 +71,8 @@ export default function GroupSuggestionPage() {
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [message, setMessage] = useState<string | null>(null);
 	const [activeCardIndex, setActiveCardIndex] = useState(0);
+	const [savingCard, setSavingCard] = useState(false);
+	const activeCardRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		const load = async () => {
@@ -153,6 +156,30 @@ export default function GroupSuggestionPage() {
 		setActiveCardIndex((prev) => (prev + 1) % suggestionCards.length);
 	};
 
+	const handleCardGet = async () => {
+		if (!activeCardRef.current || savingCard) {
+			return;
+		}
+
+		setSavingCard(true);
+		try {
+			const dataUrl = await toPng(activeCardRef.current, {
+				cacheBust: true,
+				pixelRatio: 2,
+				backgroundColor: "#F9FBF9",
+			});
+
+			const link = document.createElement("a");
+			link.download = `asobokka-suggestion-${passcode}-${activeCardIndex + 1}.png`;
+			link.href = dataUrl;
+			link.click();
+		} catch {
+			setMessage("カード画像の保存に失敗しました。もう一度お試しください。");
+		} finally {
+			setSavingCard(false);
+		}
+	};
+
 	if (loading) {
 		return <main className="min-h-screen bg-[#D6F8C2]" />;
 	}
@@ -218,7 +245,10 @@ export default function GroupSuggestionPage() {
 											opacity: isActive ? 1 : 0.75,
 										}}
 									>
-										<div className="rounded-3xl sm:rounded-[28px] border-2 border-[#389E95] bg-[#F9FBF9] px-3 sm:px-4 py-4 sm:py-5 shadow-[0_0_18px_rgba(56,158,149,0.15)] h-full">
+										<div
+											ref={isActive ? activeCardRef : null}
+											className="rounded-3xl sm:rounded-[28px] border-2 border-[#389E95] bg-[#F9FBF9] px-3 sm:px-4 py-4 sm:py-5 shadow-[0_0_18px_rgba(56,158,149,0.15)] h-full"
+										>
 											<div className="mb-2.5 flex items-center gap-2">
 												<span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#389E95] px-1.5 text-[10px] font-bold text-white">
 													{index + 1}
@@ -249,8 +279,13 @@ export default function GroupSuggestionPage() {
 							>
 								<span className="text-[#389E95] font-bold">ズレ表示へ戻る</span>
 							</Link>
-							<button type="button" className="flex-1 bg-white rounded-2xl py-2.5 min-h-11 flex items-center justify-center active:scale-95 transition-transform">
-								<span className="text-[#389E95] font-bold">カードゲット</span>
+							<button
+								type="button"
+								onClick={() => void handleCardGet()}
+								disabled={savingCard}
+								className={`flex-1 bg-white rounded-2xl py-2.5 min-h-11 flex items-center justify-center transition-transform ${savingCard ? "opacity-60" : "active:scale-95"}`}
+							>
+								<span className="text-[#389E95] font-bold">{savingCard ? "保存中..." : "カードゲット"}</span>
 							</button>
 						</div>
 					</div>
