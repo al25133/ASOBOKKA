@@ -183,6 +183,7 @@ export default function GroupCreate() {
         {/* ✨ リンク先を /groups/area に変更！ */}
         <Link href={`/groups/area?avatar=${avatarId}`} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
           <span className="text-[#389E95] font-bold">診断スタート</span>
+        </Link>
         <Link href={groupCode ? `/groups/${groupCode}` : '/'} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
           <span className="text-[#389E95] font-bold">次へ</span>
         </Link>
