@@ -136,16 +136,13 @@ function ConditionPageContent() {
       <div className="relative z-20 mt-12 w-full shadow-sm">
         <HomeHeaderBar
           rightSlot={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center">
               <div className="flex -space-x-3">
                 {[1, 8, 5].map((id) => (
                   <div key={id} className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
                     <Image src={`/avatars/avatar${id}.svg`} alt="" width={36} height={36} />
                   </div>
                 ))}
-              </div>
-              <div className="flex flex-col gap-[5px] w-7 ml-1 cursor-pointer p-1">
-                <div className="h-0.5 bg-white rounded-full w-full"/><div className="h-0.5 bg-white rounded-full w-full"/><div className="h-0.5 bg-white rounded-full w-full"/>
               </div>
             </div>
           }

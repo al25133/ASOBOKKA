@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { HeaderHamburger } from "@/components/ui/account-menu";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type TeamMember = {
@@ -63,7 +62,7 @@ export function TeamMembersHeader({ passcode, members }: TeamMembersHeaderProps)
 	}, [fetchedMembers, members]);
 
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex items-center">
 			<div className="flex -space-x-3">
 				{visibleMembers.length > 0
 					? visibleMembers.map((member) => (
@@ -77,7 +76,6 @@ export function TeamMembersHeader({ passcode, members }: TeamMembersHeaderProps)
 							</div>
 						))}
 			</div>
-			<HeaderHamburger colorClassName="bg-white" className="ml-1" />
 		</div>
 	);
 }
