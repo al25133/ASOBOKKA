@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
+import { TopLogoBar } from "@/components/ui/app-header";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -30,9 +30,7 @@ const crowdScale = ["とても少なめ", "少なめ", "ふつう", "にぎや�
 const timeScale = ["1時間以内", "2時間くらい", "3時間くらい", "半日", "終日"];
 
 function parseCondition(raw: string | null): ParsedCondition {
-    if (!raw) {
-        return { spendingStyle: null, distance: null, crowd: null, time: null, budget: null };
-    }
+    if (!raw) return { spendingStyle: null, distance: null, crowd: null, time: null, budget: null };
     const getPart = (key: string) => {
         const match = raw.match(new RegExp(`${key}:([^/]+)`));
         return match?.[1]?.trim() ?? null;
@@ -72,7 +70,6 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
         dget: 3000,
     });
 
-    // 丸のサイズを計算する関数 (1と5が最大、3が最小)
     const getCircleSize = (val: number) => {
         switch (val) {
             case 1: case 5: return "w-9 h-9";
@@ -135,7 +132,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
         );
         setSaving(false);
         if (error) {
-            setMessage("条件の保存に失敗しました。");
+            setMessage("保存に失敗しました。");
             return;
         }
         router.push(`/groups/${passcode}/result`);
@@ -151,50 +148,53 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
     ] as const;
 
     return (
-        <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-12 px-6 min-h-[calc(100vh-100px)] select-none">
-            {/* 🧭 プログレスバー */}
-            <div className="w-full flex justify-between items-center mb-10 px-4 relative shrink-0">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white z-0 -translate-y-1/2 opacity-50"></div>
-                {["ホーム", "場所", "目的", "条件"].map((label, i) => (
-                    <div key={label} className="relative z-10 flex flex-col items-center gap-1">
-                        {i === 3 && (
-                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-7 h-7 animate-bounce duration-700">
-                                <Image src="/小さいペンギン白 1.svg" alt="" width={28} height={28} className="object-contain" />
-                            </div>
-                        )}
-                        <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 ${i <= 3 ? "bg-[#389E95] border-[#389E95] scale-110 shadow-md" : "bg-white border-[#389E95]/30"}`}></div>
-                        <span className={`text-[10px] font-black ${i <= 3 ? "text-[#389E95]" : "text-[#389E95]/40"}`}>{label}</span>
-                    </div>
-                ))}
+        <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-10 px-6 pb-44 select-none">
+            <div className="w-full flex flex-col items-center mb-10 px-4 relative shrink-0">
+                <div className="absolute top-1.75 left-0 w-full h-0.5 flex items-center px-4">
+                    <div className="bg-[#389E95] w-full h-full transition-all duration-500"></div>
+                </div>
+
+                <div className="w-full flex justify-between items-start relative min-h-12.5">
+                    {["ホーム", "場所", "目的", "条件"].map((label, i) => (
+                        <div key={label} className="relative z-10 flex flex-col items-center gap-2">
+                            {i === 3 && (
+                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-7 h-7 animate-bounce duration-700">
+                                    <Image src="/小さいペンギン白 1.svg" alt="" width={28} height={28} className="object-contain" />
+                                </div>
+                            )}
+                            <div className="w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 bg-[#389E95] border-[#389E95] scale-110 shadow-md"></div>
+                            <span className="text-[10px] font-bold text-[#389E95]">{label}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="flex flex-col gap-10 w-full">
                 {conditionItems.map((item) => (
                     <div key={item.key} className="flex flex-col gap-4">
                         <div className="flex justify-between items-center px-1">
-                            <span className="text-sm font-black text-[#389E95] tracking-tighter">{item.labelL}</span>
-                            <span className="text-sm font-black text-[#389E95] tracking-tighter">{item.labelR}</span>
+                            <span className="text-sm font-bold text-[#389E95] tracking-tight">{item.labelL}</span>
+                            <span className="text-sm font-bold text-[#389E95] tracking-tight">{item.labelR}</span>
                         </div>
                         <div className="flex justify-between items-center relative h-10 px-1">
-                            <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-[#389E95]/20 -translate-y-1/2 z-0"></div>
+                            <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-[#389E95]/20 -translate-y-1/2 z-0"></div>
                             {[1, 2, 3, 4, 5].map((val) => (
                                 <button
                                     key={val}
                                     onClick={() => setSelections({ ...selections, [item.key]: val })}
                                     className={`relative z-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${getCircleSize(val)} ${selections[item.key] === val ? "bg-[#389E95] border-[#389E95] scale-110 shadow-lg" : "bg-white border-[#389E95]/40"}`}
                                 >
-                                    <div className={`rounded-full ${selections[item.key] === val ? "w-2 h-2 bg-white" : "w-1.5 h-1.5 bg-[#389E95]/20"}`}></div>
+                                    <div className={`rounded-full ${selections[item.key] === val ? "w-2.5 h-2.5 bg-[#389E95]" : "w-1.5 h-1.5 bg-[#389E95]/20"}`}></div>
                                 </button>
                             ))}
                         </div>
                     </div>
                 ))}
 
-                {/* 💰 予算バー */}
-                <div className="flex flex-col gap-4 mt-4 mb-36">
+                <div className="flex flex-col gap-4 mt-4">
                     <div className="flex justify-between items-end px-1">
-                        <span className="text-sm font-black text-[#389E95]">予算</span>
-                        <span className="text-lg font-black text-[#389E95] leading-none">¥{selections.dget.toLocaleString()} <span className="text-xs">以内</span></span>
+                        <span className="text-sm font-bold text-[#389E95]">予算</span>
+                        <span className="text-lg font-bold text-[#389E95] leading-none">¥{selections.dget.toLocaleString()} <span className="text-xs">以内</span></span>
                     </div>
                     <div className="relative px-1 flex items-center">
                         <input
@@ -205,26 +205,25 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
                             style={{ backgroundImage: `linear-gradient(to right, #389E95 ${(selections.dget / 50000) * 100}%, transparent 0%)` }}
                         />
                     </div>
-                    <div className="flex justify-between px-1 opacity-50 text-[10px] font-black text-[#389E95]">
+                    <div className="flex justify-between px-1 opacity-50 text-[10px] font-bold text-[#389E95]">
                         <span>¥0</span><span>¥50,000+</span>
                     </div>
                 </div>
             </div>
 
-            {message && <p className="w-full mt-3 text-sm text-[#5A5A5A] text-center">{message}</p>}
+            {message && <p className="w-full mt-3 text-sm text-[#5A5A5A] text-center font-bold">{message}</p>}
 
-            <div className="fixed bottom-10 z-40 w-full max-w-90 bg-[#52A399] rounded-[30px] p-3 shadow-2xl flex justify-between gap-3 mx-auto border-t border-white/20">
-                <Link href={`/groups/${passcode}/purpose`} className="flex-1 bg-white rounded-2xl py-3.5 text-center active:scale-95 shadow-sm">
-                    <span className="text-[#389E95] font-black tracking-widest text-base">戻る</span>
+            <div className="fixed bottom-10 z-40 w-full max-w-90 bg-[#52A399] rounded-[30px] p-3 shadow-2xl flex justify-between gap-3 mx-auto border-t border-white/10">
+                <Link href={`/groups/${passcode}/purpose`} className="flex-1 bg-white rounded-2xl py-3.5 flex items-center justify-center active:scale-95 shadow-sm text-[#389E95] font-bold tracking-widest text-base">
+                    戻る
                 </Link>
                 <button
                     type="button" onClick={() => void saveCondition()} disabled={saving}
-                    className={`flex-1 bg-white rounded-2xl py-3.5 text-center transition-all ${saving ? "opacity-30 grayscale pointer-events-none" : "active:scale-95 shadow-md"}`}
+                    className={`flex-1 bg-white rounded-2xl py-3.5 flex items-center justify-center transition-all text-[#389E95] font-bold tracking-widest text-base ${saving ? "opacity-30 grayscale pointer-events-none" : "active:scale-95 shadow-md"}`}
                 >
-                    <span className="text-[#389E95] font-black tracking-widest text-base">結果表示</span>
+                    結果表示
                 </button>
             </div>
-            <div className="fixed bottom-0 left-0 w-full h-44 bg-white rounded-t-[120px] z-0 pointer-events-none shadow-[0_-10px_40px_rgba(0,0,0,0.05)]"></div>
         </div>
     );
 }
@@ -233,17 +232,19 @@ function GroupConditionPageContent() {
     const params = useParams<{ id: string }>();
 
     return (
-        <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden select-none">
-            {/* ✅ app/page.tsx と同様に三本線を消しました */}
+        <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-x-hidden select-none">
             <TopLogoBar className="bg-[#D6F8C2]" rightSlot={<div />} />
-            
-            {/* ✅ flex justify-end でアバターを右寄せに配置 */}
-            <HomeHeaderBar rightSlot={
-                <div className="flex justify-end w-full">
+            <header className="relative z-30 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] shadow-sm">
+                <Link href="/groups">
+                    <Image src="/homelogo.svg" alt="home" width={32} height={32} />
+                </Link>
+                <div className="ml-auto">
                     <TeamMembersHeader passcode={params.id} />
                 </div>
-            } />
-            <ConditionSelectionContent passcode={params.id} />
+            </header>
+            <Suspense fallback={<div className="pt-20 text-[#389E95] font-bold text-center">読み込み中...</div>}>
+                <ConditionSelectionContent passcode={params.id} />
+            </Suspense>
         </main>
     );
 }
