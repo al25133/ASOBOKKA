@@ -154,7 +154,7 @@ export default function GroupRoomPage() {
 			</div>
 
 			<div className="fixed bottom-10 z-40 w-full max-w-90 bg-[#52A399] rounded-[30px] p-3 shadow-lg flex justify-between gap-3 mx-auto">
-				<Link href="/groups" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
+				<Link href="/" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">
 					<span className="text-[#389E95] font-bold">戻る</span>
 				</Link>
 				<Link href={`/groups/${passcode}/area`} className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center">

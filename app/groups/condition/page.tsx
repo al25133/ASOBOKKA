@@ -133,7 +133,7 @@ function ConditionPageContent() {
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden select-none">
       <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] mt-12 shadow-sm">
-        <Link href="/groups"><Image src="/homelogo.svg" alt="" width={32} height={32} /></Link>
+        <Link href="/"><Image src="/homelogo.svg" alt="" width={32} height={32} /></Link>
         <div className="flex items-center gap-2">
           <div className="flex -space-x-3">
             {[1, 8, 5].map((id) => (
