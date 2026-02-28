@@ -170,7 +170,7 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 
 	return (
 		<div className="w-full h-full flex items-start justify-center overflow-hidden">
-			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="結果グラフ">
+			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="結果グラフ" className="drop-shadow-sm">
 				{rings.map((ring) => {
 					const points = radarAxes
 						.map((_, index) => {
@@ -195,12 +195,10 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 
 function SuggestionCardCanvas({
 	card,
-	cardNumber,
 	radarValues,
 	groupType,
 }: {
 	card: SuggestionCard;
-	cardNumber: number;
 	radarValues: number[];
 	groupType: string;
 }) {
@@ -209,20 +207,17 @@ function SuggestionCardCanvas({
 			<div className="h-full grid grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
 				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
-						<p className="text-base font-black text-[#389E95] leading-none">{groupType}</p>
-						<div className="-mt-1 w-full h-full -ml-4 sm:-ml-6">
+						<p className="text-base font-black text-[#389E95] leading-none drop-shadow-sm">{groupType}</p>
+						<div className="-mt-2 sm:-mt-3 w-full h-full -ml-4 sm:-ml-6">
 							<SuggestionRadarChart values={radarValues} />
 						</div>
 					</div>
 					<div className="h-full flex flex-col justify-start gap-0">
 						<div className="flex items-start gap-0">
-							<p className="text-xs sm:text-[13px] font-bold text-[#5A7C55] leading-snug">{card.catchCopy}</p>
+							<p className="text-xs sm:text-[13px] font-bold text-[#5A7C55] leading-snug drop-shadow-sm">{card.catchCopy}</p>
 						</div>
-						<div className="flex items-center justify-between gap-1">
-							<span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#389E95] px-1.5 text-[10px] font-bold text-white">
-								{cardNumber}
-							</span>
-							<p className="text-xs sm:text-sm font-bold text-[#389E95]">{card.area}</p>
+						<div className="flex items-center justify-end gap-1">
+							<p className="text-xs sm:text-sm font-bold text-[#389E95] drop-shadow-sm">{card.area}</p>
 						</div>
 					</div>
 				</div>
@@ -232,8 +227,8 @@ function SuggestionCardCanvas({
 						<Image src={place.imageSrc} alt={place.name} fill className="object-cover opacity-85" />
 						<div className="absolute inset-0 bg-white/35" />
 						<div className="absolute inset-0 flex items-center justify-between px-3 sm:px-3.5">
-							<p className="text-xs sm:text-sm font-bold text-[#2F6E68]">{place.name}</p>
-							<span className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold text-[#389E95]">画像差し替え予定</span>
+							<p className="text-xs sm:text-sm font-bold text-[#2F6E68] drop-shadow-sm">{place.name}</p>
+							<span className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold text-[#389E95] drop-shadow-sm">画像差し替え予定</span>
 						</div>
 					</div>
 				))}
@@ -510,7 +505,7 @@ export default function GroupSuggestionPage() {
 							>
 								<div ref={leftPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-r-3xl">
 									<div className="absolute top-0 right-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
-										<SuggestionCardCanvas card={prevCard} cardNumber={prevCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
+										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 									<button
 										type="button"
@@ -522,13 +517,13 @@ export default function GroupSuggestionPage() {
 
 								<article key={`${activeCard.title}-${activeCardIndex}`} className="w-full">
 									<div ref={activeCardRef}>
-										<SuggestionCardCanvas card={activeCard} cardNumber={activeCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
+										<SuggestionCardCanvas card={activeCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 								</article>
 
 								<div ref={rightPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-l-3xl">
 									<div className="absolute top-0 left-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
-										<SuggestionCardCanvas card={nextCard} cardNumber={nextCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
+										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 									<button
 										type="button"
