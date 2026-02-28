@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -251,7 +252,16 @@ export default function GroupSuggestionPage() {
 			</div>
 
 			<div className="w-full max-w-112.5 bg-white rounded-t-[60px] grow px-4 sm:px-7 pt-8 sm:pt-10 pb-12 sm:pb-16 shadow-2xl">
-				<h1 className="text-[#5A7C55] text-center text-2xl font-bold mb-1">こんなのはどう？</h1>
+				<div className="-mt-2 sm:-mt-3 mb-3 flex justify-center">
+					<Image
+						src="/こんなのはどう.svg"
+						alt="提案しているキャラクター"
+						width={168}
+						height={168}
+						className="h-28 w-28 sm:h-36 sm:w-36 object-contain"
+						priority
+					/>
+				</div>
 				<p className="text-center text-sm text-[#6D8D69] mb-8">横にスワイプして提案を切り替えよう。</p>
 
 				{message ? <p className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">{message}</p> : null}
@@ -304,6 +314,16 @@ export default function GroupSuggestionPage() {
 								})}
 							</div>
 						</section>
+
+						<div className="flex justify-center pt-1">
+							<Image
+								src="/歩いてる.svg"
+								alt="歩いてるキャラクター"
+								width={172}
+								height={80}
+								className="h-14 sm:h-16 w-auto object-contain"
+							/>
+						</div>
 
 						<div className="w-full bg-[#52A399] rounded-[30px] p-2.5 sm:p-3 shadow-lg flex justify-between gap-2.5 sm:gap-3">
 							<Link
