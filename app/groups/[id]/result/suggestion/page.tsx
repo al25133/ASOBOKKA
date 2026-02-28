@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toPng } from "html-to-image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccountMenu, HeaderHamburger } from "@/components/ui/account-menu";
+import { AccountMenu } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -207,21 +207,18 @@ function SuggestionCardCanvas({
 	return (
 		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-[520px] sm:h-[560px]">
 			<div className="h-full grid grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
-				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[1fr_2fr] gap-1.5 sm:gap-2 items-center">
-					<div className="h-full flex flex-col items-center justify-start gap-0">
+				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
+					<div className="h-full flex flex-col items-start justify-start gap-0">
 						<p className="text-sm font-bold text-[#389E95] leading-none">{groupType}</p>
-						<div className="-mt-1 w-full h-full">
-						<SuggestionRadarChart values={radarValues} />
+						<div className="-mt-1 w-full h-full -ml-4 sm:-ml-6">
+							<SuggestionRadarChart values={radarValues} />
 						</div>
 					</div>
-					<div className="h-full flex flex-col justify-between">
-						<div className="flex items-start justify-between gap-2">
+					<div className="h-full flex flex-col justify-start gap-0">
+						<div className="flex items-start gap-0">
 							<p className="text-xs sm:text-[13px] font-bold text-[#5A7C55] leading-snug">{card.catchCopy}</p>
-							<button type="button" aria-label="お気に入り" className="text-[#389E95] text-lg leading-none">
-								♡
-							</button>
 						</div>
-						<div className="flex items-center justify-between gap-2">
+						<div className="flex items-center justify-between gap-1">
 							<span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#389E95] px-1.5 text-[10px] font-bold text-white">
 								{cardNumber}
 							</span>
@@ -255,6 +252,9 @@ export default function GroupSuggestionPage() {
 	const [activeCardIndex, setActiveCardIndex] = useState(0);
 	const [savingCard, setSavingCard] = useState(false);
 	const activeCardRef = useRef<HTMLDivElement | null>(null);
+	const leftPreviewRef = useRef<HTMLDivElement | null>(null);
+	const rightPreviewRef = useRef<HTMLDivElement | null>(null);
+	const previousCardIndexRef = useRef(0);
 
 	useEffect(() => {
 		const load = async () => {
@@ -384,6 +384,55 @@ export default function GroupSuggestionPage() {
 		[topArea, topCrowd, topDistance, topPurpose, topSpending, topTime],
 	);
 
+	useEffect(() => {
+		if (!activeCardRef.current || suggestionCards.length === 0) {
+			return;
+		}
+
+		const previousIndex = previousCardIndexRef.current;
+		if (previousIndex === activeCardIndex) {
+			return;
+		}
+
+		const movedNext = (previousIndex + 1) % suggestionCards.length === activeCardIndex;
+		const offset = movedNext ? 72 : -72;
+
+		activeCardRef.current.animate(
+			[
+				{ transform: `translateX(${offset}px)`, opacity: 0.78 },
+				{ transform: "translateX(0)", opacity: 1 },
+			],
+			{
+				duration: 260,
+				easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+			}
+		);
+
+		const previewOffset = movedNext ? 44 : -44;
+		leftPreviewRef.current?.animate(
+			[
+				{ transform: `translateX(${previewOffset}px)`, opacity: 0.82 },
+				{ transform: "translateX(0)", opacity: 1 },
+			],
+			{
+				duration: 260,
+				easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+			}
+		);
+		rightPreviewRef.current?.animate(
+			[
+				{ transform: `translateX(${previewOffset}px)`, opacity: 0.82 },
+				{ transform: "translateX(0)", opacity: 1 },
+			],
+			{
+				duration: 260,
+				easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+			}
+		);
+
+		previousCardIndexRef.current = activeCardIndex;
+	}, [activeCardIndex, suggestionCards.length]);
+
 	const handlePrevCard = () => {
 		if (suggestionCards.length === 0) {
 			return;
@@ -435,7 +484,7 @@ export default function GroupSuggestionPage() {
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
 			<div className="relative w-full">
-				<TopLogoBar rightSlot={<HeaderHamburger colorClassName="bg-[#389E95]" />} className="bg-[#D6F8C2]" />
+				<TopLogoBar className="bg-[#D6F8C2]" />
 				<HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
 			</div>
 
@@ -460,17 +509,17 @@ export default function GroupSuggestionPage() {
 					<div className="space-y-3 sm:space-y-4">
 						<section className="w-full -mt-9 sm:-mt-12 relative z-10">
 							<div className="mx-auto w-full max-w-[760px] grid grid-cols-[1fr_5fr_1fr] items-stretch gap-1.5 sm:gap-2.5">
-								<button
-									type="button"
-									onClick={handlePrevCard}
-									aria-label="前のカードへ"
-									className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-l-3xl border-2 border-[#389E95]/45 bg-[#F9FBF9]/85 shadow-[0_14px_32px_rgba(56,158,149,0.2)] active:scale-95 transition-transform"
-								>
+								<div ref={leftPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-l-3xl">
 									<div className="absolute top-0 right-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
 										<SuggestionCardCanvas card={prevCard} cardNumber={prevCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
-									<div className="absolute inset-0 bg-linear-to-r from-[#D6F8C2]/35 to-transparent" aria-hidden />
-								</button>
+									<button
+										type="button"
+										onClick={handlePrevCard}
+										aria-label="前のカードへ"
+										className="absolute inset-0 z-10 active:scale-95 transition-transform"
+									/>
+								</div>
 
 								<article key={`${activeCard.title}-${activeCardIndex}`} className="w-full">
 									<div ref={activeCardRef}>
@@ -478,17 +527,17 @@ export default function GroupSuggestionPage() {
 									</div>
 								</article>
 
-								<button
-									type="button"
-									onClick={handleNextCard}
-									aria-label="次のカードへ"
-									className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-r-3xl border-2 border-[#389E95]/45 bg-[#F9FBF9]/85 shadow-[0_14px_32px_rgba(56,158,149,0.2)] active:scale-95 transition-transform"
-								>
+								<div ref={rightPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-r-3xl">
 									<div className="absolute top-0 left-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
 										<SuggestionCardCanvas card={nextCard} cardNumber={nextCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
-									<div className="absolute inset-0 bg-linear-to-l from-[#D6F8C2]/35 to-transparent" aria-hidden />
-								</button>
+									<button
+										type="button"
+										onClick={handleNextCard}
+										aria-label="次のカードへ"
+										className="absolute inset-0 z-10 active:scale-95 transition-transform"
+									/>
+								</div>
 							</div>
 							<p className="mt-2 text-center text-xs sm:text-sm text-[#5A7C55]">
 								{activeCardIndex + 1} / {suggestionCards.length}
