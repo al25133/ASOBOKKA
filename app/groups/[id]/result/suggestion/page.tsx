@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AccountMenu, HeaderHamburger } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -69,10 +69,7 @@ export default function GroupSuggestionPage() {
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [message, setMessage] = useState<string | null>(null);
-	const [activeVirtualIndex, setActiveVirtualIndex] = useState(-1);
-	const [cardOffsets, setCardOffsets] = useState<Record<number, number>>({});
-	const carouselRef = useRef<HTMLDivElement | null>(null);
-	const isAdjustingScrollRef = useRef(false);
+	const [activeCardIndex, setActiveCardIndex] = useState(0);
 
 	useEffect(() => {
 		const load = async () => {
@@ -142,102 +139,18 @@ export default function GroupSuggestionPage() {
 		[topArea, topCrowd, topDistance, topPurpose, topSpending, topTime],
 	);
 
-	const loopedCards = useMemo(() => {
+	const handlePrevCard = () => {
 		if (suggestionCards.length === 0) {
-			return [] as Array<{ card: (typeof suggestionCards)[number]; virtualIndex: number; realIndex: number }>;
-		}
-
-		return Array.from({ length: 3 }, (_, block) =>
-			suggestionCards.map((card, index) => ({
-				card,
-				realIndex: index,
-				virtualIndex: block * suggestionCards.length + index,
-			})),
-		).flat();
-	}, [suggestionCards]);
-
-	const normalizedActiveVirtualIndex = useMemo(() => {
-		if (suggestionCards.length === 0) {
-			return 0;
-		}
-		const defaultIndex = suggestionCards.length + (suggestionCards.length > 1 ? 1 : 0);
-		const baseIndex = activeVirtualIndex < 0 ? defaultIndex : activeVirtualIndex;
-		const maxIndex = loopedCards.length - 1;
-		return Math.min(Math.max(baseIndex, 0), maxIndex);
-	}, [activeVirtualIndex, loopedCards.length, suggestionCards.length]);
-
-	useEffect(() => {
-		if (suggestionCards.length === 0 || !carouselRef.current) {
 			return;
 		}
-		const initialIndex = suggestionCards.length + (suggestionCards.length > 1 ? 1 : 0);
-		const target = carouselRef.current.querySelector<HTMLElement>(`[data-card-index='${initialIndex}']`);
-		target?.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
-	}, [suggestionCards]);
-
-	const handleCarouselScroll = () => {
-		if (!carouselRef.current || isAdjustingScrollRef.current) {
-			return;
-		}
-		const viewport = carouselRef.current;
-		const viewportCenter = viewport.scrollLeft + viewport.clientWidth / 2;
-		const cards = Array.from(viewport.querySelectorAll<HTMLElement>("[data-card-index]"));
-
-		if (cards.length === 0) {
-			return;
-		}
-
-		let nearestIndex = normalizedActiveVirtualIndex;
-		let nearestDistance = Number.POSITIVE_INFINITY;
-		const nextOffsets: Record<number, number> = {};
-
-		cards.forEach((card) => {
-			const cardIndex = Number(card.dataset.cardIndex ?? "0");
-			const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-			const offset = (cardCenter - viewportCenter) / Math.max(viewport.clientWidth * 0.5, 1);
-			nextOffsets[cardIndex] = offset;
-			const distance = Math.abs(cardCenter - viewportCenter);
-			if (distance < nearestDistance) {
-				nearestDistance = distance;
-				nearestIndex = cardIndex;
-			}
-		});
-		setCardOffsets(nextOffsets);
-
-		if (nearestIndex !== normalizedActiveVirtualIndex) {
-			setActiveVirtualIndex(nearestIndex);
-		}
-
-		if (suggestionCards.length <= 1) {
-			return;
-		}
-		const groupSize = suggestionCards.length;
-
-		if (nearestIndex < groupSize || nearestIndex >= groupSize * 2) {
-			isAdjustingScrollRef.current = true;
-			const targetIndex = nearestIndex < groupSize ? nearestIndex + groupSize : nearestIndex - groupSize;
-			const target = viewport.querySelector<HTMLElement>(`[data-card-index='${targetIndex}']`);
-			target?.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
-			setActiveVirtualIndex(targetIndex);
-			requestAnimationFrame(() => {
-				isAdjustingScrollRef.current = false;
-			});
-		}
+		setActiveCardIndex((prev) => (prev - 1 + suggestionCards.length) % suggestionCards.length);
 	};
 
-	const handleCarouselWheel = (event: React.WheelEvent<HTMLElement>) => {
-		if (!carouselRef.current) {
+	const handleNextCard = () => {
+		if (suggestionCards.length === 0) {
 			return;
 		}
-
-		const dominantDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-		if (dominantDelta === 0) {
-			return;
-		}
-
-		event.preventDefault();
-		const limitedStep = Math.sign(dominantDelta) * Math.min(Math.abs(dominantDelta), 10);
-		carouselRef.current.scrollBy({ left: limitedStep, behavior: "auto" });
+		setActiveCardIndex((prev) => (prev + 1) % suggestionCards.length);
 	};
 
 	if (loading) {
@@ -262,7 +175,7 @@ export default function GroupSuggestionPage() {
 						priority
 					/>
 				</div>
-				<p className="text-center text-sm text-[#6D8D69] mb-8">横にスワイプして提案を切り替えよう。</p>
+				<p className="text-center text-sm text-[#6D8D69] mb-8">ボタンで提案カードを切り替えよう。</p>
 
 				{message ? <p className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">{message}</p> : null}
 
@@ -272,47 +185,51 @@ export default function GroupSuggestionPage() {
 					</p>
 				) : (
 					<div className="space-y-5">
-						<div className="h-[clamp(260px,36vh,360px)]" aria-hidden />
-						<section
-							ref={carouselRef}
-							onScroll={handleCarouselScroll}
-							onWheel={handleCarouselWheel}
-							className="fixed left-1/2 top-1/2 z-40 w-[min(94vw,30rem)] sm:w-[min(86vw,32rem)] -translate-x-1/2 -translate-y-1/2 overflow-x-auto snap-x snap-mandatory touch-pan-x overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-1 sm:px-2"
-						>
-							<div className="flex gap-2.5 sm:gap-3 pb-2">
-								{loopedCards.map(({ card, virtualIndex, realIndex }) => {
-									const offset = cardOffsets[virtualIndex] ?? virtualIndex - normalizedActiveVirtualIndex;
-									const clamped = Math.max(-1.6, Math.min(1.6, offset));
-									const rotate = Math.abs(clamped) < 0.12 ? 0 : clamped * 14;
-									const absOffset = Math.min(Math.abs(clamped), 1.2);
-									const scale = 1 - absOffset * 0.08;
-									const opacity = 1 - absOffset * 0.18;
-									const zIndex = 30 - Math.round(absOffset * 10);
+						<div className="flex items-center justify-center gap-3">
+							<button
+								type="button"
+								onClick={handlePrevCard}
+								className="rounded-full border-2 border-[#389E95] bg-white px-4 py-2 text-sm font-bold text-[#389E95] active:scale-95 transition-transform"
+							>
+								← 前へ
+							</button>
+							<span className="text-xs sm:text-sm text-[#5A7C55]">
+								{activeCardIndex + 1} / {suggestionCards.length}
+							</span>
+							<button
+								type="button"
+								onClick={handleNextCard}
+								className="rounded-full border-2 border-[#389E95] bg-white px-4 py-2 text-sm font-bold text-[#389E95] active:scale-95 transition-transform"
+							>
+								次へ →
+							</button>
+						</div>
 
-									return (
+						<section className="grid grid-cols-3 gap-2.5 sm:gap-3">
+							{suggestionCards.map((card, index) => {
+								const isActive = index === activeCardIndex;
+
+								return (
 									<article
-										key={`${card.title}-${virtualIndex}`}
-										data-card-index={virtualIndex}
-										className="snap-center snap-always shrink-0 basis-[82%] sm:basis-[78%] max-w-sm py-2.5 sm:py-3 relative transition-transform duration-200"
+										key={`${card.title}-${index}`}
+										className="relative py-2 sm:py-3 transition-transform duration-200"
 										style={{
-											transform: `rotate(${rotate}deg) scale(${scale})`,
-											opacity,
-											zIndex,
+											transform: `scale(${isActive ? 1 : 0.95})`,
+											opacity: isActive ? 1 : 0.75,
 										}}
 									>
-										<div className="relative z-10 rounded-[28px] sm:rounded-[30px] border-2 border-[#389E95] bg-[#F9FBF9] px-4 sm:px-5 py-5 sm:py-6 shadow-[0_0_18px_rgba(56,158,149,0.15)]">
-											<div className="mb-3 flex items-center gap-2">
+										<div className="rounded-3xl sm:rounded-[28px] border-2 border-[#389E95] bg-[#F9FBF9] px-3 sm:px-4 py-4 sm:py-5 shadow-[0_0_18px_rgba(56,158,149,0.15)] h-full">
+											<div className="mb-2.5 flex items-center gap-2">
 												<span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#389E95] px-1.5 text-[10px] font-bold text-white">
-													{realIndex + 1}
+													{index + 1}
 												</span>
-												<h2 className="text-[15px] sm:text-base font-bold text-[#5A7C55]">{card.title}</h2>
+												<h2 className="text-[13px] sm:text-sm font-bold text-[#5A7C55] leading-tight">{card.title}</h2>
 											</div>
-											<p className="text-[13px] sm:text-sm text-[#5A5A5A] leading-relaxed min-h-24">{card.detail}</p>
+											<p className="text-[12px] sm:text-[13px] text-[#5A5A5A] leading-relaxed">{card.detail}</p>
 										</div>
 									</article>
-									);
-								})}
-							</div>
+								);
+							})}
 						</section>
 
 						<div className="flex justify-center pt-1">
