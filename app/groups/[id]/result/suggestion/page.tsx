@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toPng } from "html-to-image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccountMenu } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
+import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type MemberChoice = {
@@ -245,7 +245,6 @@ function SuggestionCardCanvas({
 export default function GroupSuggestionPage() {
 	const params = useParams<{ id: string }>();
 	const passcode = params.id;
-	const [avatarId, setAvatarId] = useState("1");
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [message, setMessage] = useState<string | null>(null);
@@ -259,11 +258,6 @@ export default function GroupSuggestionPage() {
 	useEffect(() => {
 		const load = async () => {
 			const supabase = getSupabaseClient();
-			const { data: authData } = await supabase.auth.getUser();
-			const avatar = authData.user?.user_metadata?.avatar;
-			if (typeof avatar === "number" || typeof avatar === "string") {
-				setAvatarId(String(avatar));
-			}
 
 			const { data: groupData, error: groupError } = await supabase.rpc("find_group_by_passcode", {
 				input_passcode: passcode,
@@ -485,7 +479,7 @@ export default function GroupSuggestionPage() {
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
 			<div className="relative w-full">
 				<TopLogoBar className="bg-[#D6F8C2]" />
-				<HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
+				<HomeHeaderBar rightSlot={<TeamMembersHeader passcode={passcode} />} />
 			</div>
 
 			<div className="w-full max-w-112.5 rounded-t-[60px] grow px-4 sm:px-7 pt-0 pb-12 sm:pb-16">
