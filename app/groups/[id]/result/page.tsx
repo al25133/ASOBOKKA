@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { toPng } from "html-to-image";
 import { AccountMenu } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
@@ -159,6 +160,25 @@ function buildRecommendationTags(choice: MemberChoice, condition: ParsedConditio
 	return Array.from(new Set([purposeTags[0], purposeTags[1], styleTag, areaTag])).slice(0, 3);
 }
 
+function getRecommendationIcon(tags: string[]) {
+	if (tags.some((tag) => tag.includes("グルメ") || tag.includes("食べ"))) {
+		return "🍽️";
+	}
+	if (tags.some((tag) => tag.includes("カフェ") || tag.includes("スイーツ"))) {
+		return "☕";
+	}
+	if (tags.some((tag) => tag.includes("ミュージアム") || tag.includes("観光") || tag.includes("街歩き"))) {
+		return "🗺️";
+	}
+	if (tags.some((tag) => tag.includes("アウトドア") || tag.includes("スポーツ") || tag.includes("体験"))) {
+		return "🏕️";
+	}
+	if (tags.some((tag) => tag.includes("ショッピング") || tag.includes("マーケット"))) {
+		return "🛍️";
+	}
+	return "✨";
+}
+
 function RadarChart({
 	axes,
 	series,
@@ -188,16 +208,35 @@ function RadarChart({
 
 	return (
 		<div className="w-full flex justify-center">
-			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ">
-				{rings.map((ring) => {
-					const points = axes
-						.map((_, index) => {
-							const point = toPoint(ring, index);
-							return `${point.x},${point.y}`;
-						})
-						.join(" ");
-					return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
-				})}
+			   <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ">
+				   <defs>
+					   <radialGradient id="radar-bg-gradient" cx="50%" cy="50%" r="50%">
+						   <stop offset="0%" stop-color="#fff" />
+						   <stop offset="100%" stop-color="#B6F2A2" />
+					   </radialGradient>
+					   <filter id="circle-shadow" x="-30%" y="-30%" width="160%" height="160%">
+						   <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#389E95" floodOpacity="0.25" />
+					   </filter>
+				   </defs>
+				   <circle cx={center} cy={center} r={maxRadius} fill="url(#radar-bg-gradient)" />
+				   {rings.map((ring) => {
+					   const points = axes
+						   .map((_, index) => {
+							   const point = toPoint(ring, index);
+							   return `${point.x},${point.y}`;
+						   })
+						   .join(" ");
+					   // 五角形の頂点を通る円（最外周のみ）
+					   if (ring === 5) {
+						   const first = toPoint(ring, 0);
+						   const radius = Math.sqrt(Math.pow(first.x - center, 2) + Math.pow(first.y - center, 2));
+						   return <g key={ring}>
+							   <polygon points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />
+							   <circle cx={center} cy={center} r={radius} fill="none" stroke="#fff" strokeWidth={2.2} filter="url(#circle-shadow)" />
+						   </g>;
+					   }
+					   return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
+				   })}
 
 				{axes.map((_, index) => {
 					const point = toPoint(5, index);
@@ -289,6 +328,7 @@ export default function GroupResult() {
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [memberNames, setMemberNames] = useState<Record<string, string>>({});
+	const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
 	const [savingCard, setSavingCard] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
 	const cardCaptureRef = useRef<HTMLDivElement | null>(null);
@@ -333,7 +373,12 @@ export default function GroupResult() {
 						acc[member.user_id] = member.nickname;
 						return acc;
 					}, {});
+					const nextAvatars = (membersResult.members ?? []).reduce<Record<string, string>>((acc, member) => {
+						acc[member.user_id] = member.avatar;
+						return acc;
+					}, {});
 					setMemberNames(nextNames);
+					setMemberAvatars(nextAvatars);
 				}
 			}
 
@@ -448,11 +493,14 @@ export default function GroupResult() {
 				return {
 					id: `${choice.user_id}-${index}`,
 					label: isSelf ? "あなた" : memberNames[choice.user_id] ?? fallbackLabel,
+					avatar: memberAvatars[choice.user_id] ?? "1",
 					tags: buildRecommendationTags(choice, parsedConditions[index] ?? parseCondition(null)),
+					color: radarColors[index % radarColors.length],
 				};
 			}),
-		[currentUserId, memberNames, orderedChoices, parsedConditions],
+		[currentUserId, memberNames, memberAvatars, orderedChoices, parsedConditions],
 	);
+	const highlightedRecommendation = recommendations[0] ?? null;
 
 	const handleCardGet = async () => {
 		if (!cardCaptureRef.current || savingCard) {
@@ -510,7 +558,7 @@ export default function GroupResult() {
 							<p className="relative text-center text-base font-extrabold text-white mb-3">今日のあなたたちは</p>
 							<div ref={cardCaptureRef} className="relative rounded-[30px] border-2 border-[#389E95] bg-[#F9FBF9] p-5 shadow-[0_0_24px_rgba(255,255,255,0.85)]">
 								<div className="mb-3 flex items-center justify-between text-base font-black text-[#389E95]">
-									<span>{groupType}</span>
+									<span className="text-2xl sm:text-3xl font-black leading-none bg-[linear-gradient(90deg,#bb4f4f_0%,#bf7f40_20%,#a79b3f_40%,#4f8752_60%,#4a6fa8_80%,#6c57a6_100%)] bg-clip-text text-transparent">{groupType}</span>
 									<span>一致 {confidenceScore}%</span>
 								</div>
 								<RadarChart axes={radarAxes} series={radarSeries} axisAverages={axisAverages} />
@@ -540,14 +588,24 @@ export default function GroupResult() {
 									</div>
 								</div>
 
-								<div className="mt-3 space-y-2">
-									{recommendations.map((recommendation) => (
-										<div key={recommendation.id} className="rounded-xl bg-white border border-[#389E95]/20 px-3 py-2.5">
-											<p className="text-[11px] font-bold text-[#389E95] mb-1">{recommendation.label}のおすすめ</p>
-											<p className="text-xs text-[#5A5A5A]">{recommendation.tags.join("、")}</p>
+								{highlightedRecommendation ? (
+									<div className="mt-3 rounded-xl bg-white border-2 px-3 py-2.5 flex items-center gap-2" style={{ borderColor: highlightedRecommendation.color }}>
+										<Image
+											src={`/avatars/avatar${highlightedRecommendation.avatar}.svg`}
+											alt="アイコン"
+											width={32}
+											height={32}
+											className="rounded-full border border-gray-200 bg-gray-50"
+											style={{ flexShrink: 0 }}
+										/>
+										<div className="flex-1 min-w-0">
+											<p className="mb-1 text-[11px] font-bold" style={{ color: highlightedRecommendation.color }}>
+												{highlightedRecommendation.label}のおすすめ
+											</p>
+											<p className="text-xs text-[#5A5A5A] truncate">{highlightedRecommendation.tags.join("、")}</p>
 										</div>
-									))}
-								</div>
+									</div>
+								) : null}
 							</div>
 						</section>
 
