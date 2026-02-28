@@ -209,7 +209,7 @@ function SuggestionCardCanvas({
 			<div className="h-full grid grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
 				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
-						<p className="text-sm font-bold text-[#389E95] leading-none">{groupType}</p>
+						<p className="text-base font-black text-[#389E95] leading-none">{groupType}</p>
 						<div className="-mt-1 w-full h-full -ml-4 sm:-ml-6">
 							<SuggestionRadarChart values={radarValues} />
 						</div>

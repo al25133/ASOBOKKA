@@ -509,7 +509,7 @@ export default function GroupResult() {
 							<div className="absolute left-3 right-3 top-12 h-[80%] rounded-[30px] bg-white/50 blur-lg" aria-hidden />
 							<p className="relative text-center text-base font-extrabold text-white mb-3">今日のあなたたちは</p>
 							<div ref={cardCaptureRef} className="relative rounded-[30px] border-2 border-[#389E95] bg-[#F9FBF9] p-5 shadow-[0_0_24px_rgba(255,255,255,0.85)]">
-								<div className="mb-3 flex items-center justify-between text-sm font-bold text-[#389E95]">
+								<div className="mb-3 flex items-center justify-between text-base font-black text-[#389E95]">
 									<span>{groupType}</span>
 									<span>一致 {confidenceScore}%</span>
 								</div>
