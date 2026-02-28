@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { AccountMenu, HeaderHamburger } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -288,7 +289,9 @@ export default function GroupResult() {
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [memberNames, setMemberNames] = useState<Record<string, string>>({});
+	const [savingCard, setSavingCard] = useState(false);
 	const [message, setMessage] = useState<string | null>(null);
+	const cardCaptureRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		const load = async () => {
@@ -451,6 +454,30 @@ export default function GroupResult() {
 		[currentUserId, memberNames, orderedChoices, parsedConditions],
 	);
 
+	const handleCardGet = async () => {
+		if (!cardCaptureRef.current || savingCard) {
+			return;
+		}
+
+		setSavingCard(true);
+		try {
+			const dataUrl = await toPng(cardCaptureRef.current, {
+				cacheBust: true,
+				pixelRatio: 2,
+				backgroundColor: "#F9FBF9",
+			});
+
+			const link = document.createElement("a");
+			link.download = `asobokka-result-${passcode}.png`;
+			link.href = dataUrl;
+			link.click();
+		} catch {
+			setMessage("カード画像の保存に失敗しました。もう一度お試しください。");
+		} finally {
+			setSavingCard(false);
+		}
+	};
+
 	if (loading) {
 		return <main className="min-h-screen bg-[#D6F8C2]" />;
 	}
@@ -481,7 +508,7 @@ export default function GroupResult() {
 						<section className="relative pt-2">
 							<div className="absolute left-3 right-3 top-12 h-[80%] rounded-[30px] bg-white/50 blur-lg" aria-hidden />
 							<p className="relative text-center text-base font-extrabold text-white mb-3">今日のあなたたちは</p>
-							<div className="relative rounded-[30px] border-2 border-[#389E95] bg-[#F9FBF9] p-5 shadow-[0_0_24px_rgba(255,255,255,0.85)]">
+							<div ref={cardCaptureRef} className="relative rounded-[30px] border-2 border-[#389E95] bg-[#F9FBF9] p-5 shadow-[0_0_24px_rgba(255,255,255,0.85)]">
 								<div className="mb-3 flex items-center justify-between text-sm font-bold text-[#389E95]">
 									<span>{groupType}</span>
 									<span>一致 {confidenceScore}%</span>
@@ -525,8 +552,13 @@ export default function GroupResult() {
 						</section>
 
 						<div className="w-full bg-[#52A399] rounded-[30px] p-3 shadow-lg flex justify-between gap-3">
-							<button type="button" className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center active:scale-95 transition-transform">
-								<span className="text-[#389E95] font-bold">カードゲット</span>
+							<button
+								type="button"
+								onClick={() => void handleCardGet()}
+								disabled={savingCard}
+								className={`flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center transition-transform ${savingCard ? "opacity-60" : "active:scale-95"}`}
+							>
+								<span className="text-[#389E95] font-bold">{savingCard ? "保存中..." : "カードゲット"}</span>
 							</button>
 							<Link
 								href={`/groups/${passcode}/result/suggestion`}

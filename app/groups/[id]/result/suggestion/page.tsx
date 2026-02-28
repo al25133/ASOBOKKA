@@ -293,7 +293,7 @@ export default function GroupSuggestionPage() {
 									<article
 										key={`${card.title}-${virtualIndex}`}
 										data-card-index={virtualIndex}
-										className="snap-center [scroll-snap-stop:always] shrink-0 basis-[82%] sm:basis-[78%] max-w-sm py-2.5 sm:py-3 relative transition-transform duration-200"
+										className="snap-center snap-always shrink-0 basis-[82%] sm:basis-[78%] max-w-sm py-2.5 sm:py-3 relative transition-transform duration-200"
 										style={{
 											transform: `rotate(${rotate}deg) scale(${scale})`,
 											opacity,
