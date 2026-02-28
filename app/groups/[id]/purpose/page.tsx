@@ -11,7 +11,6 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 const purposeOptions = [
 	{ id: 1, title: "ショッピング", sub: "宝探ししたい", fileName: "shopping.svg" },
-	{ id: 2, title: "ハンドメイド", sub: "ものづくりしたい", fileName: "handmade.svg" },
 	{ id: 3, title: "カフェ", sub: "ゆっくり語りたい", fileName: "cafe.svg" },
 	{ id: 4, title: "ミュージアム", sub: "静かに刺激を受けたい", fileName: "museum.svg" },
 	{ id: 5, title: "観光", sub: "ちょっと冒険したい", fileName: "sightseeing.svg" },
