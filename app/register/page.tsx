@@ -76,7 +76,7 @@ export default function Register() {
 
     setLoading(false);
     if (!data.session) {
-      setMessage('登録が完了しました。確認メールのリンクを開いてからログインしてください。');
+      setMessage('登録が完了しました。ログイン画面からログインしてください。');
       return;
     }
     router.push('/');

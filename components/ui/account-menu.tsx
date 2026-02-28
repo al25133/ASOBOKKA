@@ -10,21 +10,6 @@ interface AccountMenuProps {
   avatarId: string;
 }
 
-interface HeaderHamburgerProps {
-  className?: string;
-  colorClassName?: string;
-}
-
-export function HeaderHamburger({ className = '', colorClassName = 'bg-white' }: HeaderHamburgerProps) {
-  return (
-    <div className={`flex flex-col gap-1 w-7 ${className}`.trim()} aria-hidden="true">
-      <div className={`h-0.5 w-full rounded-full ${colorClassName}`}></div>
-      <div className={`h-0.5 w-full rounded-full ${colorClassName}`}></div>
-      <div className={`h-0.5 w-full rounded-full ${colorClassName}`}></div>
-    </div>
-  );
-}
-
 const menuItems = [
   { href: '/account/settings', label: 'アカウント設定' },
   { href: '/account/settings#icon', label: 'アイコン変更' },

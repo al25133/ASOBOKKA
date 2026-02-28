@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { HomeHeaderBar } from '@/components/ui/app-header';
 
 // --- 型定義 ---
 interface ConditionState {
@@ -38,8 +39,8 @@ function ConditionSelectionContent({ avatarId }: ConditionSelectionContentProps)
     <div className="relative z-10 w-full max-w-[402px] flex flex-col items-center pt-12 px-6 min-h-[calc(100vh-100px)] select-none">
       
       {/* 🧭 プログレスバー */}
-      <div className="w-full flex justify-between items-center mb-10 px-4 relative flex-shrink-0">
-        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-white z-0 -translate-y-1/2 opacity-50"></div>
+      <div className="w-full flex justify-between items-center mb-10 px-4 relative shrink-0">
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white z-0 -translate-y-1/2 opacity-50"></div>
         {['ホーム', '場所', '目的', '条件'].map((label, i) => (
           <div key={label} className="relative z-10 flex flex-col items-center gap-1">
             {i === 3 && (
@@ -63,7 +64,7 @@ function ConditionSelectionContent({ avatarId }: ConditionSelectionContentProps)
             </div>
             
             <div className="flex justify-between items-center relative px-2">
-              <div className="absolute top-1/2 left-4 right-4 h-[1px] bg-[#389E95]/20 -translate-y-1/2 z-0"></div>
+              <div className="absolute top-1/2 left-4 right-4 h-px bg-[#389E95]/20 -translate-y-1/2 z-0"></div>
               {[1, 2, 3, 4, 5].map((val) => (
                 <button
                   key={val}
@@ -132,21 +133,21 @@ function ConditionPageContent() {
 
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden select-none">
-      <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] mt-12 shadow-sm">
-        <Link href="/"><Image src="/homelogo.svg" alt="" width={32} height={32} /></Link>
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-3">
-            {[1, 8, 5].map((id) => (
-              <div key={id} className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
-                <Image src={`/avatars/avatar${id}.svg`} alt="" width={36} height={36} />
+      <div className="relative z-20 mt-12 w-full shadow-sm">
+        <HomeHeaderBar
+          rightSlot={
+            <div className="flex items-center">
+              <div className="flex -space-x-3">
+                {[1, 8, 5].map((id) => (
+                  <div key={id} className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
+                    <Image src={`/avatars/avatar${id}.svg`} alt="" width={36} height={36} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-[5px] w-7 ml-1 cursor-pointer p-1">
-            <div className="h-0.5 bg-white rounded-full w-full"/><div className="h-0.5 bg-white rounded-full w-full"/><div className="h-0.5 bg-white rounded-full w-full"/>
-          </div>
-        </div>
-      </header>
+            </div>
+          }
+        />
+      </div>
       <ConditionSelectionContent avatarId={avatarId} />
     </main>
   );
