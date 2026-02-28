@@ -164,7 +164,7 @@ function PurposeSelectionContent({ passcode }: { passcode: string }) {
 					<span className="text-[#389E95] font-black tracking-widest text-sm">戻る</span>
 				</Link>
 				<Link
-					href={selectedPurpose ? `/groups/${passcode}/result` : "#"}
+					href={selectedPurpose ? `/groups/${passcode}/condition` : "#"}
 					className={`flex-1 bg-white rounded-2xl py-3 text-center transition-all ${!selectedPurpose || saving ? "opacity-30 grayscale pointer-events-none" : "active:scale-95"}`}
 				>
 					<span className="text-[#389E95] font-black tracking-widest text-sm">次へ</span>
