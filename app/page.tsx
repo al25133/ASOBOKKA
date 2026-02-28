@@ -54,7 +54,7 @@ function GroupsHomeContent() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col font-sans overflow-x-hidden relative items-center">
       
       {/* 🐧 ロゴエリア（最上部） */}
-      <TopLogoBar className="bg-[#D6F8C2]" />
+      <TopLogoBar  className="bg-[#D6F8C2]" />
 
       {/* 🟢 ヘッダーバー：選択したアイコンを表示 */}
       <HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />

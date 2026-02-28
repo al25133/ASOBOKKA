@@ -2,17 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+// 🐧 HeaderHamburger のインポートを削除しました
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type TeamMember = {
-	user_id: string;
-	avatar: string;
+    user_id: string;
+    avatar: string;
 };
 
 type TeamMembersHeaderProps = {
-	passcode?: string;
-	members?: TeamMember[];
+    passcode?: string;
+    members?: TeamMember[];
 };
 
 export function TeamMembersHeader({ passcode, members }: TeamMembersHeaderProps) {
@@ -42,49 +42,49 @@ export function TeamMembersHeader({ passcode, members }: TeamMembersHeaderProps)
 		};
 	}, []);
 
-	useEffect(() => {
-		if (members || !passcode) {
-			return;
-		}
+    useEffect(() => {
+        if (members || !passcode) {
+            return;
+        }
 
-		const loadMembers = async () => {
-			const supabase = getSupabaseClient();
-			const [{ data: sessionData }, groupResult] = await Promise.all([
-				supabase.auth.getSession(),
-				supabase.rpc("find_group_by_passcode", { input_passcode: passcode }),
-			]);
+        const loadMembers = async () => {
+            const supabase = getSupabaseClient();
+            const [{ data: sessionData }, groupResult] = await Promise.all([
+                supabase.auth.getSession(),
+                supabase.rpc("find_group_by_passcode", { input_passcode: passcode }),
+            ]);
 
-			const accessToken = sessionData.session?.access_token;
-			const groupId = groupResult.data?.[0]?.group_id;
+            const accessToken = sessionData.session?.access_token;
+            const groupId = groupResult.data?.[0]?.group_id;
 
-			if (!accessToken || !groupId) {
-				return;
-			}
+            if (!accessToken || !groupId) {
+                return;
+            }
 
-			const response = await fetch("/api/groups/members", {
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${accessToken}`,
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ groupId }),
-			});
+            const response = await fetch("/api/groups/members", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ groupId }),
+            });
 
-			if (!response.ok) {
-				return;
-			}
+            if (!response.ok) {
+                return;
+            }
 
-			const result = (await response.json()) as { members?: TeamMember[] };
-			setFetchedMembers(result.members ?? []);
-		};
+            const result = (await response.json()) as { members?: TeamMember[] };
+            setFetchedMembers(result.members ?? []);
+        };
 
-		void loadMembers();
-	}, [members, passcode]);
+        void loadMembers();
+    }, [members, passcode]);
 
-	const visibleMembers = useMemo(() => {
-		const source = members ?? fetchedMembers;
-		return source.slice(0, 3);
-	}, [fetchedMembers, members]);
+    const visibleMembers = useMemo(() => {
+        const source = members ?? fetchedMembers;
+        return source.slice(0, 3);
+    }, [fetchedMembers, members]);
 
 	return (
 		<div className="relative flex items-center" ref={containerRef}>
