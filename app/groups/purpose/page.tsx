@@ -5,9 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
-function PurposeSelectionContent() {
-  const searchParams = useSearchParams();
-  const avatarId = searchParams.get('avatar') || '1';
+type PurposeSelectionContentProps = {
+  avatarId: string;
+};
+
+function PurposeSelectionContent({ avatarId }: PurposeSelectionContentProps) {
 
   // 📂 フォルダ名 /purpose/ 内のファイル名に一致させています
   const purposes = [
@@ -82,7 +84,7 @@ function PurposeSelectionContent() {
   );
 }
 
-export default function PurposePage() {
+function PurposePageContent() {
   const searchParams = useSearchParams();
   const avatarId = searchParams.get('avatar') || '1';
 
@@ -104,9 +106,15 @@ export default function PurposePage() {
           </div>
         </div>
       </header>
-      <Suspense fallback={<div className="pt-20 text-[#389E95] font-bold text-center">読み込み中...</div>}>
-        <PurposeSelectionContent />
-      </Suspense>
+      <PurposeSelectionContent avatarId={avatarId} />
     </main>
+  );
+}
+
+export default function PurposePage() {
+  return (
+    <Suspense fallback={<div className="pt-20 text-[#389E95] font-bold text-center">読み込み中...</div>}>
+      <PurposePageContent />
+    </Suspense>
   );
 }

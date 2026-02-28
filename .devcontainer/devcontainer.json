@@ -1,0 +1,11 @@
+{
+  "name": "ASOBOKKA",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "npm.packageManager": "pnpm"
+      }
+    }
+  },
+  "postCreateCommand": "corepack enable && pnpm install"
+}
