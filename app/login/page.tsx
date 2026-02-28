@@ -25,14 +25,6 @@ export default function Login() {
 			return;
 		}
 
-		const { data: userData } = await supabase.auth.getUser();
-		if (!userData.user?.email_confirmed_at) {
-			await supabase.auth.signOut();
-			setLoading(false);
-			setMessage("メール確認が完了していません。確認メールのリンクを開いてからログインしてください。");
-			return;
-		}
-
 		setLoading(false);
 		router.push("/");
 	};
