@@ -501,8 +501,13 @@ export default function GroupSuggestionPage() {
 					</p>
 				) : (
 					<div className="space-y-3 sm:space-y-4">
-						<section className="w-full -mt-9 sm:-mt-12 relative z-10">
-							<div className="mx-auto w-full max-w-[760px] grid grid-cols-[1fr_5fr_1fr] items-stretch gap-1.5 sm:gap-2.5">
+						<section className="relative z-10 left-1/2 -translate-x-1/2 w-screen -mt-9 sm:-mt-12">
+							<div
+								className="mx-auto w-full grid items-stretch gap-1.5 sm:gap-2.5"
+								style={{
+									gridTemplateColumns: "minmax(0,1fr) minmax(0,clamp(300px,calc(100vw - 136px),542px)) minmax(0,1fr)",
+								}}
+							>
 								<div ref={leftPreviewRef} className="relative h-[520px] sm:h-[560px] overflow-hidden rounded-l-3xl">
 									<div className="absolute top-0 right-0 h-full w-[560px] sm:w-[620px] pointer-events-none">
 										<SuggestionCardCanvas card={prevCard} cardNumber={prevCardIndex + 1} radarValues={radarAverageValues} groupType={groupType} />
