@@ -1,4 +1,3 @@
-// 仮デザイン: 本画面は一時的な暫定UIです（後続で正式デザインへ置き換え予定）。
 "use client";
 
 import Link from "next/link";
@@ -21,6 +20,7 @@ import {
 	type ParsedCondition,
 } from "@/lib/group-result";
 
+// --- 型定義 ---
 type MemberChoice = {
 	user_id: string;
 	selected_area: string | null;
@@ -42,12 +42,6 @@ type MemberRadarSeries = {
 	isSelf: boolean;
 };
 
-type GroupMemberProfile = {
-	user_id: string;
-	nickname: string;
-	avatar: string;
-};
-
 const radarAxes: RadarAxis[] = [
 	{ label: "過ごし方", key: "spendingStyle" },
 	{ label: "距離", key: "distance" },
@@ -59,15 +53,9 @@ const radarAxes: RadarAxis[] = [
 const radarColors = ["#389E95", "#52A399", "#5A7C55", "#5A5A5A"];
 
 function getGroupTypeByMismatch(score: number) {
-	if (score <= 25) {
-		return "ぴったり型";
-	}
-	if (score <= 45) {
-		return "バランス型";
-	}
-	if (score <= 65) {
-		return "わいわい型";
-	}
+	if (score <= 25) return "ぴったり型";
+	if (score <= 45) return "バランス型";
+	if (score <= 65) return "わいわい型";
 	return "チャレンジ型";
 }
 
@@ -79,37 +67,12 @@ function buildRecommendationTags(choice: MemberChoice, condition: ParsedConditio
 		ショッピング: ["ショッピング", "セレクトショップ", "マーケット"],
 		アクティビティ: ["アウトドア", "体験", "スポーツ"],
 	};
-
-	const purposeTags = choice.selected_purpose ? (byPurpose[choice.selected_purpose] ?? ["観光", "ミュージアム", "アウトドア"]) : ["観光", "ミュージアム", "アウトドア"];
-	const styleTag = condition.spendingStyle === "ゆったり" || condition.spendingStyle === "のんびり"
-		? "ミュージアム"
-		: condition.spendingStyle === "アクティブ"
-			? "アウトドア"
-			: "観光";
-	const areaTag = choice.selected_area ?? "街歩き";
-
-	return Array.from(new Set([purposeTags[0], purposeTags[1], styleTag, areaTag])).slice(0, 3);
+	const purposeTags = choice.selected_purpose ? (byPurpose[choice.selected_purpose] ?? ["観光", "街歩き"]) : ["観光", "街歩き"];
+	const styleTag = condition.spendingStyle === "アクティブ" ? "アウトドア" : "ゆったり";
+	return Array.from(new Set([purposeTags[0], purposeTags[1], styleTag, (choice.selected_area ?? "街歩き")])).slice(0, 3);
 }
 
-function getRecommendationIcon(tags: string[]) {
-	if (tags.some((tag) => tag.includes("グルメ") || tag.includes("食べ"))) {
-		return "🍽️";
-	}
-	if (tags.some((tag) => tag.includes("カフェ") || tag.includes("スイーツ"))) {
-		return "☕";
-	}
-	if (tags.some((tag) => tag.includes("ミュージアム") || tag.includes("観光") || tag.includes("街歩き"))) {
-		return "🗺️";
-	}
-	if (tags.some((tag) => tag.includes("アウトドア") || tag.includes("スポーツ") || tag.includes("体験"))) {
-		return "🏕️";
-	}
-	if (tags.some((tag) => tag.includes("ショッピング") || tag.includes("マーケット"))) {
-		return "🛍️";
-	}
-	return "✨";
-}
-
+// --- レーダーチャートコンポーネント（濃い緑・視認性最大版 + オレンジ点線） ---
 function RadarChart({
 	axes,
 	series,
@@ -126,6 +89,9 @@ function RadarChart({
 	const rings = [1, 2, 3, 4, 5];
 	const axisCount = axes.length;
 
+	const strongGreen = "#2D7D76";
+	const averageOrange = "#FF8A00";
+
 	const angleAt = (index: number) => ((Math.PI * 2) / axisCount) * index - Math.PI / 2;
 	const toPoint = (value: number, index: number, clamp = true) => {
 		const angle = angleAt(index);
@@ -140,54 +106,37 @@ function RadarChart({
 	return (
 		<div className="w-full flex justify-center">
 			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ">
+				<defs>
+					<filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+						<feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+						<feMerge>
+							<feMergeNode in="coloredBlur" />
+							<feMergeNode in="SourceGraphic" />
+						</feMerge>
+					</filter>
+				</defs>
+
+				{/* 背景の白い円 */}
+				<circle cx={center} cy={center} r={maxRadius} fill="#ffffff" stroke={strongGreen} strokeWidth="3" strokeOpacity="0.7" filter="url(#glow)" />
+
+				{/* 内側の五角形（網目） */}
 				{rings.map((ring) => {
-					const points = axes
-						.map((_, index) => {
-							const point = toPoint(ring, index);
-							return `${point.x},${point.y}`;
-						})
-						.join(" ");
-					return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
+					if (ring === 5) return null;
+					const points = axes.map((_, index) => {
+						const point = toPoint(ring, index);
+						return `${point.x},${point.y}`;
+					}).join(" ");
+					return <polygon key={ring} points={points} fill="none" stroke={strongGreen} strokeOpacity="0.4" strokeWidth="1.5" />;
 				})}
 
+				{/* 軸の線 */}
 				{axes.map((_, index) => {
 					const point = toPoint(5, index);
-					return (
-						<line
-							key={`axis-${index}`}
-							x1={center}
-							y1={center}
-							x2={point.x}
-							y2={point.y}
-							stroke="#389E95"
-							strokeOpacity="0.35"
-						/>
-					);
+					return <line key={`axis-${index}`} x1={center} y1={center} x2={point.x} y2={point.y} stroke={strongGreen} strokeOpacity="0.4" strokeWidth="1.2" />;
 				})}
 
-				{series.map((line, index) => {
-					const color = radarColors[index % radarColors.length];
-					const points = line.values
-						.map((value, axisIndex) => {
-							const point = toPoint(value, axisIndex);
-							return `${point.x},${point.y}`;
-						})
-						.join(" ");
-
-					return (
-						<polygon
-							key={line.id}
-							points={points}
-							fill={color}
-							fillOpacity={line.isSelf ? 0.28 : 0.12}
-							stroke={color}
-							strokeOpacity={line.isSelf ? 1 : 0.7}
-							strokeWidth={line.isSelf ? 2.5 : 2}
-						/>
-					);
-				})}
-
-				{axisAverages.length > 0 ? (
+				{/* オレンジの点線（全員の平均値） */}
+				{axisAverages.length > 0 && (
 					<>
 						<polygon
 							points={axisAverages
@@ -197,41 +146,45 @@ function RadarChart({
 								})
 								.join(" ")}
 							fill="none"
-							stroke="#FF8A00"
+							stroke={averageOrange}
 							strokeWidth={2}
 							strokeDasharray="5 4"
 							strokeLinejoin="round"
 						/>
 						{axisAverages.map((axis, index) => {
 							const point = toPoint(axis.value, index);
-							return <circle key={`avg-point-${axis.label}`} cx={point.x} cy={point.y} r={2.6} fill="#FF8A00" />;
+							return <circle key={`avg-point-${axis.label}`} cx={point.x} cy={point.y} r={2.6} fill={averageOrange} />;
 						})}
 					</>
-				) : null}
-				<circle cx={center} cy={center} r={4} fill="#389E95" />
+				)}
 
+				{/* メンバーそれぞれのデータ */}
+				{series.map((line, index) => {
+					const color = radarColors[index % radarColors.length];
+					const points = line.values
+						.map((value, axisIndex) => {
+							const point = toPoint(value, axisIndex);
+							return `${point.x},${point.y}`;
+						})
+						.join(" ");
+
+					return <polygon key={line.id} points={points} fill={color} fillOpacity={line.isSelf ? 0.25 : 0.08} stroke={color} strokeOpacity={line.isSelf ? 1 : 0.7} strokeWidth={line.isSelf ? 2 : 1.2} filter="url(#glow)" />;
+				})}
+
+				{/* 真ん中の点 */}
+				<circle cx={center} cy={center} r={4} fill={strongGreen} />
+
+				{/* ラベルテキスト */}
 				{axes.map((axis, index) => {
 					const point = toPoint(5.7, index, false);
-					return (
-						<text
-							key={`label-${axis.label}`}
-							x={point.x}
-							y={point.y}
-							fontSize="12"
-							fontWeight="700"
-							fill="#389E95"
-							textAnchor="middle"
-							dominantBaseline="middle"
-						>
-							{axis.label}
-						</text>
-					);
+					return <text key={`label-${axis.label}`} x={point.x} y={point.y} fontSize="11" fontWeight="800" fill={strongGreen} textAnchor="middle" dominantBaseline="middle">{axis.label}</text>;
 				})}
 			</svg>
 		</div>
 	);
 }
 
+// --- メインページ ---
 export default function GroupResult() {
 	const params = useParams<{ id: string }>();
 	const router = useRouter();
@@ -276,7 +229,7 @@ export default function GroupResult() {
 				});
 
 				if (membersResponse.ok) {
-					const membersResult = (await membersResponse.json()) as { members?: GroupMemberProfile[] };
+					const membersResult = (await membersResponse.json()) as { members?: { user_id: string; nickname: string; avatar: string }[] };
 					const nextNames = (membersResult.members ?? []).reduce<Record<string, string>>((acc, member) => {
 						acc[member.user_id] = member.nickname;
 						return acc;
@@ -456,98 +409,66 @@ export default function GroupResult() {
 	}
 
 	return (
-		<main className="relative min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
-			<div className="pointer-events-none absolute inset-0 z-10 bg-black/55" aria-hidden />
+		<main className="relative min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden select-none">
+			<div className="pointer-events-none absolute inset-0 z-10 bg-black/45" aria-hidden />
 
-			<div className="relative w-full">
+			<div className="relative w-full z-40">
 				<TopLogoBar className="bg-[#D6F8C2]" />
 				<HomeHeaderBar rightSlot={<TeamMembersHeader passcode={passcode} />} />
-				<div className="pointer-events-none absolute inset-0 z-30 bg-black/35" aria-hidden />
 			</div>
 
-			<div className="relative z-40 w-full max-w-112.5 grow px-7 pt-10 pb-16 flex items-start justify-center">
-				{message ? (
-					<p className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-						{message}
-					</p>
-				) : null}
+			<div className="relative z-40 w-full max-w-md grow px-7 pt-10 pb-20 flex flex-col items-center">
+				{message && <p className="mb-4 text-white font-bold bg-red-500/80 px-4 py-2 rounded-xl">{message}</p>}
 
 				{choices.length === 0 ? (
-					<p className="rounded-2xl border border-[#389E95]/20 bg-[#F9FBF9] p-4 text-sm text-[#5A7C55]">
-						まだメンバーの回答がありません。
-					</p>
+					<p className="bg-white/10 backdrop-blur-md p-6 rounded-2xl text-white font-bold text-center">回答を待っています...</p>
 				) : (
-					<div className="w-full max-w-md space-y-5">
-						<section className="relative pt-2">
-							<div className="absolute left-3 right-3 top-12 h-[80%] rounded-[30px] bg-white/50 blur-lg" aria-hidden />
-							<p className="relative text-center text-base font-extrabold text-white mb-3">今日のあなたたちは</p>
-							<div ref={cardCaptureRef} className="relative rounded-[30px] border-2 border-[#389E95] bg-[#F9FBF9] p-5 shadow-[0_0_24px_rgba(255,255,255,0.85)]">
-								<div className="mb-3 flex items-center justify-between text-base font-black text-[#389E95]">
-									<span className="text-2xl sm:text-3xl font-black leading-none bg-[linear-gradient(90deg,#bb4f4f_0%,#bf7f40_20%,#a79b3f_40%,#4f8752_60%,#4a6fa8_80%,#6c57a6_100%)] bg-clip-text text-transparent">{groupType}</span>
-									<span>一致 {confidenceScore}%</span>
+					<div className="w-full space-y-6">
+						<section className="relative">
+							<div className="absolute inset-x-4 top-14 h-4/5 bg-white/25 blur-3xl rounded-[40px]" />
+							<p className="relative text-center text-white font-bold mb-4 text-lg drop-shadow-md">今日のあなたたちは</p>
+
+							<div ref={cardCaptureRef} className="relative rounded-[45px] border-[8px] border-white bg-[#F9FBF9] p-7 shadow-2xl">
+								<div className="mb-5 flex items-center justify-between">
+									<span className="text-2xl font-bold bg-linear-to-r from-[#bb4f4f] via-[#4f8752] to-[#6c57a6] bg-clip-text text-transparent">{groupType}</span>
+									<span className="text-xs font-bold text-[#389E95] bg-[#D6F8C2]/60 px-3 py-1 rounded-full">一致 {confidenceScore}%</span>
 								</div>
+
 								<RadarChart axes={radarAxes} series={radarSeries} axisAverages={axisAverages} />
-								<div className="mt-3 flex flex-wrap gap-2">
-									{radarSeries.map((line, index) => {
-										const color = radarColors[index % radarColors.length];
-										return (
-											<div key={line.id} className="inline-flex items-center gap-1.5 rounded-full border border-[#389E95]/20 bg-white px-2.5 py-1 text-[11px] text-[#5A5A5A]">
-												<span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color, opacity: line.isSelf ? 1 : 0.65 }} />
-												<span className={line.isSelf ? "font-bold text-[#389E95]" : ""}>{line.label}</span>
-											</div>
-										);
-									})}
-								</div>
-								<div className="mt-4 flex gap-2 text-[10px] sm:text-xs">
-									<div className="min-w-0 flex-1 rounded-xl bg-white border border-[#389E95]/20 px-2 py-1.5 text-[#5A5A5A] flex items-center justify-between gap-1">
-										<span>ズレ総量</span>
-										<span className="font-bold text-[#389E95] whitespace-nowrap">{mismatchTotal}%</span>
+
+								<div className="mt-6 flex gap-2">
+									<div className="flex-1 bg-white border border-gray-100 rounded-2xl p-2.5 text-center shadow-sm">
+										<p className="text-[8px] text-gray-400 font-bold mb-0.5">ズレ総量</p>
+										<p className="text-[13px] font-bold text-[#389E95] leading-none">{mismatchTotal}%</p>
 									</div>
-									<div className="min-w-0 flex-1 rounded-xl bg-white border border-[#389E95]/20 px-2 py-1.5 text-[#5A5A5A] flex items-center justify-between gap-1">
-										<span>安心度</span>
-										<span className="font-bold text-[#389E95] whitespace-nowrap">{confidenceScore}%</span>
+									<div className="flex-1 bg-white border border-gray-100 rounded-2xl p-2.5 text-center shadow-sm">
+										<p className="text-[8px] text-gray-400 font-bold mb-0.5">安心度</p>
+										<p className="text-[13px] font-bold text-[#389E95] leading-none">{confidenceScore}%</p>
 									</div>
-									<div className="min-w-0 flex-1 rounded-xl bg-white border border-[#389E95]/20 px-2 py-1.5 text-[#5A5A5A] flex items-center justify-between gap-1">
-										<span>最大ズレ</span>
-										<span className="font-bold text-[#389E95] whitespace-nowrap">{maxMismatch.label} {maxMismatch.value}%</span>
+									<div className="flex-1 bg-white border border-gray-100 rounded-2xl p-2.5 text-center shadow-sm">
+										<p className="text-[8px] text-gray-400 font-bold mb-0.5">最大ズレ</p>
+										<p className="text-[13px] font-bold text-[#389E95] leading-none">{maxMismatch.label}</p>
 									</div>
 								</div>
 
-								{highlightedRecommendation ? (
-									<div className="mt-3 rounded-xl bg-white border-2 px-3 py-2.5 flex items-center gap-2" style={{ borderColor: highlightedRecommendation.color }}>
-										<Image
-											src={`/avatars/avatar${highlightedRecommendation.avatar}.svg`}
-											alt="アイコン"
-											width={32}
-											height={32}
-											className="rounded-full border border-gray-200 bg-gray-50"
-											style={{ flexShrink: 0 }}
-										/>
+								{highlightedRecommendation && (
+									<div className="mt-5 bg-[#F0FAED] border border-[#389E95]/10 rounded-2xl p-3 flex items-center gap-3 shadow-inner">
+										<Image src={`/avatars/avatar${highlightedRecommendation.avatar}.svg`} alt="icon" width={36} height={36} className="rounded-full bg-white border border-gray-100" />
 										<div className="flex-1 min-w-0">
-											<p className="mb-1 text-[11px] font-bold" style={{ color: highlightedRecommendation.color }}>
-												{highlightedRecommendation.label}のおすすめ
-											</p>
-											<p className="text-xs text-[#5A5A5A] truncate">{highlightedRecommendation.tags.join("、")}</p>
+											<p className="text-[10px] font-bold text-[#389E95] mb-0.5">{highlightedRecommendation.label}のおすすめ</p>
+											<p className="text-xs text-[#5A5A5A] font-medium truncate">{highlightedRecommendation.tags.join("、")}</p>
 										</div>
 									</div>
-								) : null}
+								)}
 							</div>
 						</section>
 
-						<div className="w-full bg-[#52A399] rounded-[30px] p-3 shadow-lg flex justify-between gap-3">
-							<button
-								type="button"
-								onClick={() => void handleCardGet()}
-								disabled={savingCard}
-								className={`flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center transition-transform ${savingCard ? "opacity-60" : "active:scale-95"}`}
-							>
-								<span className="text-[#389E95] font-bold">{savingCard ? "保存中..." : "カードゲット"}</span>
+						<div className="bg-[#52A399]/95 backdrop-blur-md rounded-[35px] p-3.5 shadow-xl flex gap-3 border-t border-white/25">
+							<button onClick={() => void handleCardGet()} disabled={savingCard} className="flex-1 bg-white rounded-2xl py-3.5 font-bold text-[#389E95] active:scale-95 transition-all shadow-sm">
+								{savingCard ? "保存中..." : "カードゲット"}
 							</button>
-							<Link
-								href={`/groups/${passcode}/result/suggestion`}
-								className="flex-1 bg-white rounded-2xl py-2.5 flex items-center justify-center active:scale-95 transition-transform"
-							>
-								<span className="text-[#389E95] font-bold">提案スタート</span>
+							<Link href={`/groups/${passcode}/result/suggestion`} className="flex-1 bg-white rounded-2xl py-3.5 font-bold text-[#389E95] text-center active:scale-95 transition-all shadow-md">
+								提案スタート
 							</Link>
 						</div>
 					</div>
