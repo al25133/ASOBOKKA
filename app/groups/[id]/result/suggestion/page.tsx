@@ -43,8 +43,16 @@ type SuggestionCard = {
 type SuggestionCategory = "shopping" | "outdoor-nature-sightseeing";
 
 type SupportedArea = "渋谷・原宿・表参道" | "新宿・代々木";
+type SupportedPurpose = "ショッピング" | "自然" | "観光" | "アウトドア";
 
 const SUPPORTED_AREAS: SupportedArea[] = ["渋谷・原宿・表参道", "新宿・代々木"];
+const SUPPORTED_PURPOSES: SupportedPurpose[] = ["ショッピング", "自然", "観光", "アウトドア"];
+const PURPOSE_CATEGORY_MAP: Record<SupportedPurpose, SuggestionCategory> = {
+	ショッピング: "shopping",
+	自然: "outdoor-nature-sightseeing",
+	観光: "outdoor-nature-sightseeing",
+	アウトドア: "outdoor-nature-sightseeing",
+};
 
 function buildImagePaths(basePath: string) {
 	return Array.from({ length: 6 }, (_, index) => `${basePath}/${String(index + 1).padStart(2, "0")}.svg`);
@@ -99,11 +107,23 @@ function toSupportedArea(area: string): SupportedArea {
 	return DEFAULT_AREA;
 }
 
+function isSupportedPurpose(purpose: string): purpose is SupportedPurpose {
+	return SUPPORTED_PURPOSES.some((supportedPurpose) => supportedPurpose === purpose);
+}
+
 function purposeToCategory(purpose: string): SuggestionCategory {
-	if (purpose === "ショッピング") {
-		return "shopping";
+	if (isSupportedPurpose(purpose)) {
+		return PURPOSE_CATEGORY_MAP[purpose];
 	}
 	return "outdoor-nature-sightseeing";
+}
+
+function resolvePrimaryCategory(topSupportedPurpose: Array<[SupportedPurpose, number]>): SuggestionCategory {
+	const primaryPurpose = topSupportedPurpose[0]?.[0];
+	if (!primaryPurpose) {
+		return PURPOSE_CATEGORY_MAP["観光"];
+	}
+	return PURPOSE_CATEGORY_MAP[primaryPurpose];
 }
 
 function pickTwoAreaImages(area: SupportedArea, category: SuggestionCategory, cardIndex: number) {
@@ -326,6 +346,10 @@ export default function GroupSuggestionPage() {
 
 	const topArea = useMemo(() => getRankedEntries(areaStats), [areaStats]);
 	const topPurpose = useMemo(() => getRankedEntries(purposeStats), [purposeStats]);
+	const topSupportedPurpose = useMemo(
+		() => topPurpose.filter((entry): entry is [SupportedPurpose, number] => isSupportedPurpose(entry[0])),
+		[topPurpose],
+	);
 	const topSpending = useMemo(() => getRankedEntries(spendingStats), [spendingStats]);
 	const topDistance = useMemo(() => getRankedEntries(distanceStats), [distanceStats]);
 	const topCrowd = useMemo(() => getRankedEntries(crowdStats), [crowdStats]);
@@ -351,12 +375,13 @@ export default function GroupSuggestionPage() {
 		() => {
 			const firstArea = rankedSupportedAreas[0] ?? DEFAULT_AREA;
 			const secondArea = rankedSupportedAreas[1] ?? firstArea;
+			const primaryCategory = resolvePrimaryCategory(topSupportedPurpose);
 
 			const baseCards = [
 				{
 					title: "まずはみんな寄りプラン",
 					area: firstArea,
-					category: purposeToCategory(pickEntry(topPurpose, 0, "観光")),
+					category: primaryCategory,
 					placeNames: [
 						`${firstArea}の人気スポット`,
 						`${firstArea}の定番スポット`,
@@ -365,13 +390,13 @@ export default function GroupSuggestionPage() {
 				{
 					title: "バランス重視プラン",
 					area: secondArea,
-					category: purposeToCategory(pickEntry(topPurpose, 1, pickEntry(topPurpose, 0, "観光"))),
+					category: primaryCategory,
 					placeNames: ["軽めに遊べるスポット", "ゆったりランチ候補"],
 				},
 				{
 					title: "気分転換プラン",
 					area: firstArea,
-					category: purposeToCategory(pickEntry(topPurpose, 2, pickEntry(topPurpose, 0, "観光"))),
+					category: primaryCategory,
 					placeNames: ["少し冒険するエリア", "新しい体験スポット"],
 				},
 			];
@@ -390,7 +415,7 @@ export default function GroupSuggestionPage() {
 				};
 			});
 		},
-		[rankedSupportedAreas, topPurpose],
+		[rankedSupportedAreas, topSupportedPurpose],
 	);
 
 	useEffect(() => {

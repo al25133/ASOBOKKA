@@ -19,6 +19,8 @@ const purposeOptions = [
     { id: 8, title: "アウトドア", sub: "体を動かしたい", fileName: "outdoor.svg" },
 ];
 
+const availablePurposes = new Set(["ショッピング", "自然", "観光", "アウトドア"]);
+
 function PurposeSelectionContent({ passcode }: { passcode: string }) {
     const router = useRouter();
     const [selectedPurposeId, setSelectedPurposeId] = useState<number | null>(null);
@@ -116,27 +118,29 @@ function PurposeSelectionContent({ passcode }: { passcode: string }) {
                 <div className="w-full max-w-100.5 mx-auto grid grid-cols-2 gap-3 pb-2">
                     {purposeOptions.map((p) => {
                         const isSelected = selectedPurposeId === p.id;
+                        const isComingSoon = !availablePurposes.has(p.title);
                         return (
                             <div
                                 key={p.id}
                                 onClick={() => {
+                                    if (isComingSoon) return;
                                     setSelectedPurposeId(p.id);
                                     setSelectedPurpose(p.title);
                                     void savePurpose(p.title);
                                 }}
-                                className="relative h-36 rounded-[25px] overflow-hidden shadow-xl active:scale-95 bg-white transition-transform cursor-pointer border-2 border-white/20"
+                                className={`relative h-36 rounded-[25px] overflow-hidden shadow-xl bg-white transition-transform border-2 border-white/20 ${isComingSoon ? "cursor-not-allowed" : "cursor-pointer active:scale-95"}`}
                             >
                                 <div className="absolute inset-0">
                                     <Image src={`/purpose/${p.fileName}`} alt={p.title} fill className="object-cover" />
                                 </div>
-                                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent"></div>
+                                <div className={`absolute inset-0 ${isComingSoon ? "bg-black/45" : "bg-linear-to-t from-black/70 via-transparent to-transparent"}`}></div>
                                 <div className="absolute bottom-3 left-3 right-3 text-white">
                                     <p className="text-sm font-bold leading-tight">{p.title}</p>
-                                    <p className="text-[8px] font-medium opacity-90 tracking-tighter">{p.sub}</p>
+                                    <p className="text-[8px] font-medium opacity-90 tracking-tighter">{isComingSoon ? "Coming Soon" : p.sub}</p>
                                 </div>
 
                                 {/* ❤️ ハートの枠（未選択）と赤いハート（選択済み） */}
-                                <div className={`absolute top-2.5 right-2.5 transition-all duration-300 ${isSelected ? "text-[#FF5A5F] scale-110" : "text-white/80"}`}>
+                                <div className={`absolute top-2.5 right-2.5 transition-all duration-300 ${isComingSoon ? "text-white/30" : isSelected ? "text-[#FF5A5F] scale-110" : "text-white/80"}`}>
                                     <svg 
                                         xmlns="http://www.w3.org/2000/svg" 
                                         viewBox="0 0 24 24" 
@@ -152,6 +156,12 @@ function PurposeSelectionContent({ passcode }: { passcode: string }) {
                                         />
                                     </svg>
                                 </div>
+
+                                {isComingSoon && (
+                                    <div className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[#389E95]">
+                                        Coming Soon
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
