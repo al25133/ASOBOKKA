@@ -71,20 +71,20 @@ const AREA_IMAGE_MAP: Record<SupportedArea, Record<SuggestionCategory, string[]>
 
 const CATCH_COPY_MAP: Record<SuggestionCategory, string[]> = {
 	shopping: [
-		"語り合いが主役な日",
-		"ちょっと穴場な日",
-		"安心して遊べる日",
-		"テンポで仲良くなる日",
-		"コスパ最高な日",
-		"ゆるアクティブな日",
+		"語り合いが主役な日。",
+		"ちょっと穴場な日。",
+		"安心して遊べる日。",
+		"テンポで仲良くなる日。",
+		"コスパ最高な日。",
+		"ゆるアクティブな日。",
 	],
 	"outdoor-nature-sightseeing": [
-		"いいとこどりな日",
-		"近場で発見の日",
-		"それぞれペースの日",
-		"ゆるっと満足な日",
-		"ちょうどいい冒険の日",
-		"それぞれが主役の日",
+		"いいとこどりな日。",
+		"近場で発見の日。",
+		"それぞれペースの日。",
+		"ゆるっと満足な日。",
+		"ちょうどいい冒険の日。",
+		"それぞれが主役の日。",
 	],
 };
 
@@ -233,21 +233,46 @@ function SuggestionCardCanvas({
 	card,
 	radarValues,
 	radarSeries,
+	isLiked = false,
+	onToggleLike,
 }: {
 	card: SuggestionCard;
 	radarValues: number[];
 	radarSeries: Array<{ id: string; values: number[]; isSelf: boolean }>;
+	isLiked?: boolean;
+	onToggleLike?: () => void;
 }) {
 	return (
-		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140 overflow-hidden">
-			<div className="h-full grid grid-cols-3 gap-2.5 sm:gap-3 content-start">
+		<div className="relative rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] overflow-hidden">
+			<button
+				type="button"
+				onClick={onToggleLike}
+				aria-label={isLiked ? "お気に入りを解除" : "お気に入りに追加"}
+				className={`absolute top-3 right-5 z-20 h-8 w-8 flex items-center justify-center transition-transform ${onToggleLike ? "active:scale-95" : "pointer-events-none"}`}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					strokeWidth="2"
+					stroke={isLiked ? "#FF5A5F" : "#389E95"}
+					fill={isLiked ? "#FF5A5F" : "none"}
+					className="h-5 w-5"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+					/>
+				</svg>
+			</button>
+			<div className="grid grid-cols-3 gap-2.5 sm:gap-3 content-start">
 				<div className="row-span-1 col-span-3 rounded-2xl border border-[#389E95]/35 bg-[#D6F8C2] px-2 py-1.5 sm:px-2.5 sm:py-2 grid grid-cols-[0.8fr_2.2fr] gap-0.5 sm:gap-1 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
 						<div className="w-full h-full -ml-4 sm:-ml-6">
 							<SuggestionRadarChart values={radarValues} series={radarSeries} />
 						</div>
 					</div>
-					<div className="h-full flex flex-col justify-start gap-0 -ml-2 sm:-ml-3 pr-1 sm:pr-2">
+					<div className="h-full flex flex-col justify-start gap-0 -ml-2 sm:-ml-3 pr-1 sm:pr-2 pt-5 sm:pt-6">
 						<div className="flex items-start gap-0">
 							<p className="text-sm sm:text-base font-black text-[#2F6E68] leading-snug tracking-[0.01em] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_2px_6px_rgba(24,78,64,0.32)]">{card.catchCopy}</p>
 						</div>
@@ -258,8 +283,8 @@ function SuggestionCardCanvas({
 				</div>
 
 				{card.places.map((place) => (
-					<div key={place.name} className="col-span-3 relative overflow-hidden rounded-2xl border border-[#389E95]/25 bg-white aspect-3/2">
-						<Image src={place.imageSrc} alt={place.name} fill className="object-contain object-top" />
+					<div key={place.name} className="col-span-3 overflow-hidden rounded-2xl border border-[#389E95]/25 bg-white shadow-md">
+						<Image src={place.imageSrc} alt={place.name} width={269} height={103} className="block w-full h-auto object-contain aspect-269/103" />
 					</div>
 				))}
 			</div>
@@ -276,6 +301,7 @@ export default function GroupSuggestionPage() {
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [message, setMessage] = useState<string | null>(null);
 	const [activeCardIndex, setActiveCardIndex] = useState(0);
+	const [likedCardIndexes, setLikedCardIndexes] = useState<number[]>([]);
 	const [savingCard, setSavingCard] = useState(false);
 	const activeCardRef = useRef<HTMLDivElement | null>(null);
 	const leftPreviewRef = useRef<HTMLDivElement | null>(null);
@@ -505,6 +531,14 @@ export default function GroupSuggestionPage() {
 		}
 	};
 
+	const isCardLiked = (cardIndex: number) => likedCardIndexes.includes(cardIndex);
+
+	const toggleCardLike = (cardIndex: number) => {
+		setLikedCardIndexes((prev) =>
+			prev.includes(cardIndex) ? prev.filter((index) => index !== cardIndex) : [...prev, cardIndex],
+		);
+	};
+
 	const activeCard = suggestionCards[activeCardIndex];
 	const prevCardIndex = (activeCardIndex - 1 + suggestionCards.length) % suggestionCards.length;
 	const nextCardIndex = (activeCardIndex + 1) % suggestionCards.length;
@@ -554,7 +588,7 @@ export default function GroupSuggestionPage() {
 							>
 								<div ref={leftPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-r-3xl">
 									<div className="absolute top-0 right-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
-										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} radarSeries={radarSeries} />
+										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} radarSeries={radarSeries} isLiked={isCardLiked(prevCardIndex)} />
 									</div>
 									<button
 										type="button"
@@ -566,13 +600,19 @@ export default function GroupSuggestionPage() {
 
 								<article key={`${activeCard.title}-${activeCardIndex}`} className="w-full">
 									<div ref={activeCardRef}>
-										<SuggestionCardCanvas card={activeCard} radarValues={radarAverageValues} radarSeries={radarSeries} />
+										<SuggestionCardCanvas
+											card={activeCard}
+											radarValues={radarAverageValues}
+											radarSeries={radarSeries}
+											isLiked={isCardLiked(activeCardIndex)}
+											onToggleLike={() => toggleCardLike(activeCardIndex)}
+										/>
 									</div>
 								</article>
 
 								<div ref={rightPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-l-3xl">
 									<div className="absolute top-0 left-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
-										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} radarSeries={radarSeries} />
+										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} radarSeries={radarSeries} isLiked={isCardLiked(nextCardIndex)} />
 									</div>
 									<button
 										type="button"
