@@ -586,8 +586,8 @@ export default function GroupSuggestionPage() {
 									gridTemplateColumns: "minmax(0,1fr) minmax(0,clamp(300px,calc(100vw - 136px),542px)) minmax(0,1fr)",
 								}}
 							>
-								<div ref={leftPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-r-3xl">
-									<div className="absolute top-0 right-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
+								<div ref={leftPreviewRef} className="relative overflow-hidden rounded-r-3xl flex justify-end">
+									<div className="w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none shrink-0">
 										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} radarSeries={radarSeries} isLiked={isCardLiked(prevCardIndex)} />
 									</div>
 									<button
@@ -610,8 +610,8 @@ export default function GroupSuggestionPage() {
 									</div>
 								</article>
 
-								<div ref={rightPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-l-3xl">
-									<div className="absolute top-0 left-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
+								<div ref={rightPreviewRef} className="relative overflow-hidden rounded-l-3xl">
+									<div className="w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
 										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} radarSeries={radarSeries} isLiked={isCardLiked(nextCardIndex)} />
 									</div>
 									<button
