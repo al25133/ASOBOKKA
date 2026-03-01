@@ -70,14 +70,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
         dget: 3000,
     });
 
-    const getCircleSize = (val: number) => {
-        switch (val) {
-            case 1: case 5: return "w-9 h-9";
-            case 2: case 4: return "w-7 h-7";
-            case 3: return "w-5 h-5";
-            default: return "w-7 h-7";
-        }
-    };
+    // ✅ 丸のサイズを統一するため、以前の getCircleSize 関数は削除しました
 
     const conditionValue = useMemo(
         () => `過ごし方:${spendingScale[selections.end - 1]} / 距離:${distanceScale[selections.stance - 1]} / 人の多さ:${crowdScale[selections.owd - 1]} / 時間:${timeScale[selections.me - 1]} / 予算:${selections.dget}円`,
@@ -149,6 +142,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
 
     return (
         <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-10 px-6 pb-44 select-none">
+            {/* プログレスバー */}
             <div className="w-full flex flex-col items-center mb-10 px-4 relative shrink-0">
                 <div className="absolute top-1.75 left-0 w-full h-0.5 flex items-center px-4">
                     <div className="bg-[#389E95] w-full h-full transition-all duration-500"></div>
@@ -182,7 +176,11 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
                                 <button
                                     key={val}
                                     onClick={() => setSelections({ ...selections, [item.key]: val })}
-                                    className={`relative z-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${getCircleSize(val)} ${selections[item.key] === val ? "bg-[#389E95] border-[#389E95] scale-110 shadow-lg" : "bg-white border-[#389E95]/40"}`}
+                                    // ✅ 丸のサイズを w-7 h-7 で統一しました
+                                    className={`relative z-10 w-7 h-7 rounded-full border-2 transition-all duration-200 flex items-center justify-center 
+                                        ${selections[item.key] === val 
+                                            ? "bg-[#389E95] border-[#389E95] scale-110 shadow-lg" 
+                                            : "bg-white border-[#389E95]/40"}`}
                                 >
                                     <div className={`rounded-full ${selections[item.key] === val ? "w-2.5 h-2.5 bg-[#389E95]" : "w-1.5 h-1.5 bg-[#389E95]/20"}`}></div>
                                 </button>
@@ -191,6 +189,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
                     </div>
                 ))}
 
+                {/* 予算スライダー */}
                 <div className="flex flex-col gap-4 mt-4">
                     <div className="flex justify-between items-end px-1">
                         <span className="text-sm font-bold text-[#389E95]">予算</span>
