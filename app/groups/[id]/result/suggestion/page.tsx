@@ -10,17 +10,18 @@ import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
 	aggregate,
-	budgetToScale,
 	indexFromScale,
 	parseCondition,
 	spendingScale,
 	distanceScale,
 	crowdScale,
 	timeScale,
+	toRadarValues,
 	toRadarAverageValues,
 } from "@/lib/group-result";
 
 type MemberChoice = {
+	user_id: string;
 	selected_area: string | null;
 	selected_purpose: string | null;
 	selected_value: string | null;
@@ -60,22 +61,28 @@ const AREA_IMAGE_MAP: Record<SupportedArea, Record<SuggestionCategory, string[]>
 	},
 };
 
+const CATCH_COPY_MAP: Record<SuggestionCategory, string[]> = {
+	shopping: [
+		"語り合いが主役な日",
+		"ちょっと穴場な日",
+		"安心して遊べる日",
+		"テンポで仲良くなる日",
+		"コスパ最高な日",
+		"ゆるアクティブな日",
+	],
+	"outdoor-nature-sightseeing": [
+		"いいとこどりな日",
+		"近場で発見の日",
+		"それぞれペースの日",
+		"ゆるっと満足な日",
+		"ちょうどいい冒険の日",
+		"それぞれが主役の日",
+	],
+};
+
 const DEFAULT_AREA = SUPPORTED_AREAS[0];
 
 const radarAxes = ["過ごし方", "距離", "人の多さ", "予算", "時間"];
-
-function getGroupTypeByMismatch(score: number) {
-	if (score <= 25) {
-		return "ぴったり型";
-	}
-	if (score <= 45) {
-		return "バランス型";
-	}
-	if (score <= 65) {
-		return "わいわい型";
-	}
-	return "チャレンジ型";
-}
 
 function getRankedEntries(stats: Record<string, number>) {
 	return Object.entries(stats).sort((a, b) => b[1] - a[1]);
@@ -105,7 +112,20 @@ function pickTwoAreaImages(area: SupportedArea, category: SuggestionCategory, ca
 	return [areaImages[startIndex], areaImages[(startIndex + 1) % areaImages.length]];
 }
 
-function SuggestionRadarChart({ values }: { values: number[] }) {
+function pickCatchCopy(category: SuggestionCategory, cardIndex: number) {
+	const copies = CATCH_COPY_MAP[category];
+	return copies[(cardIndex * 2) % copies.length];
+}
+
+function SuggestionRadarChart({
+	values,
+	series,
+}: {
+	values: number[];
+	series: Array<{ id: string; values: number[]; isSelf: boolean }>;
+}) {
+	const radarColors = ["#389E95", "#52A399", "#5A7C55", "#5A5A5A"];
+	const averageOrange = "#FF8A00";
 	const size = 148;
 	const center = size / 2;
 	const maxRadius = 52;
@@ -123,7 +143,7 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 		};
 	};
 
-	const polygonPoints = values
+	const averagePoints = values
 		.map((value, index) => {
 			const point = toPoint(value, index);
 			return `${point.x},${point.y}`;
@@ -148,7 +168,41 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 					return <line key={`axis-${index}`} x1={center} y1={center} x2={point.x} y2={point.y} stroke="#389E95" strokeOpacity="0.32" />;
 				})}
 
-				<polygon points={polygonPoints} fill="#389E95" fillOpacity={0.24} stroke="#389E95" strokeWidth={2} strokeLinejoin="round" />
+				{series.map((line, index) => {
+					const color = radarColors[index % radarColors.length];
+					const points = line.values
+						.map((value, axisIndex) => {
+							const point = toPoint(value, axisIndex);
+							return `${point.x},${point.y}`;
+						})
+						.join(" ");
+
+					return (
+						<polygon
+							key={line.id}
+							points={points}
+							fill={color}
+							fillOpacity={line.isSelf ? 0.22 : 0.08}
+							stroke={color}
+							strokeOpacity={line.isSelf ? 1 : 0.7}
+							strokeWidth={line.isSelf ? 1.8 : 1.1}
+							strokeLinejoin="round"
+						/>
+					);
+				})}
+
+				<polygon
+					points={averagePoints}
+					fill="none"
+					stroke={averageOrange}
+					strokeWidth={1.8}
+					strokeDasharray="4 3"
+					strokeLinejoin="round"
+				/>
+				{values.map((axisValue, index) => {
+					const point = toPoint(axisValue, index);
+					return <circle key={`avg-dot-${index}`} cx={point.x} cy={point.y} r={1.7} fill={averageOrange} />;
+				})}
 				<circle cx={center} cy={center} r={2.8} fill="#389E95" />
 			</svg>
 		</div>
@@ -158,28 +212,27 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 function SuggestionCardCanvas({
 	card,
 	radarValues,
-	groupType,
+	radarSeries,
 }: {
 	card: SuggestionCard;
 	radarValues: number[];
-	groupType: string;
+	radarSeries: Array<{ id: string; values: number[]; isSelf: boolean }>;
 }) {
 	return (
 		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140 overflow-hidden">
 			<div className="h-full grid grid-cols-3 gap-2.5 sm:gap-3 content-start">
-				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
+				<div className="row-span-1 col-span-3 rounded-2xl border border-[#389E95]/35 bg-[#D6F8C2] px-2 py-1.5 sm:px-2.5 sm:py-2 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
-						<p className="text-base font-black text-[#389E95] leading-none drop-shadow-sm">{groupType}</p>
-						<div className="-mt-2 sm:-mt-3 w-full h-full -ml-4 sm:-ml-6">
-							<SuggestionRadarChart values={radarValues} />
+						<div className="w-full h-full -ml-4 sm:-ml-6">
+							<SuggestionRadarChart values={radarValues} series={radarSeries} />
 						</div>
 					</div>
 					<div className="h-full flex flex-col justify-start gap-0">
 						<div className="flex items-start gap-0">
-							<p className="text-xs sm:text-[13px] font-bold text-[#5A7C55] leading-snug drop-shadow-sm">{card.catchCopy}</p>
+							<p className="text-sm sm:text-base font-black text-[#2F6E68] leading-snug tracking-[0.01em] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_2px_6px_rgba(24,78,64,0.32)]">{card.catchCopy}</p>
 						</div>
-						<div className="flex items-center justify-end gap-1">
-							<p className="text-xs sm:text-sm font-bold text-[#389E95] drop-shadow-sm">{card.area}</p>
+						<div className="mt-2 sm:mt-3 flex items-center justify-end gap-1">
+							<p className="text-sm sm:text-base font-medium text-[#6B7280]">{card.area}周辺</p>
 						</div>
 					</div>
 				</div>
@@ -199,6 +252,7 @@ export default function GroupSuggestionPage() {
 	const router = useRouter();
 	const passcode = params.id;
 	const [loading, setLoading] = useState(true);
+	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
 	const [message, setMessage] = useState<string | null>(null);
 	const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -211,6 +265,8 @@ export default function GroupSuggestionPage() {
 	useEffect(() => {
 		const load = async () => {
 			const supabase = getSupabaseClient();
+			const { data: authData } = await supabase.auth.getUser();
+			setCurrentUserId(authData.user?.id ?? null);
 
 			const { data: groupData, error: groupError } = await supabase.rpc("find_group_by_passcode", {
 				input_passcode: passcode,
@@ -224,7 +280,7 @@ export default function GroupSuggestionPage() {
 
 			const { data, error } = await supabase
 				.from("group_members")
-				.select("selected_area, selected_purpose, selected_value, is_ready")
+				.select("user_id, selected_area, selected_purpose, selected_value, is_ready")
 				.eq("group_id", groupData[0].group_id);
 
 			setLoading(false);
@@ -251,13 +307,21 @@ export default function GroupSuggestionPage() {
 		[choices],
 	);
 
+	const orderedReadyChoices = useMemo(() => {
+		if (!currentUserId) {
+			return readyChoices;
+		}
+		const self = readyChoices.filter((choice) => choice.user_id === currentUserId);
+		const others = readyChoices.filter((choice) => choice.user_id !== currentUserId);
+		return [...self, ...others];
+	}, [currentUserId, readyChoices]);
+
 	const areaStats = useMemo(() => aggregate(readyChoices.map((choice) => choice.selected_area)), [readyChoices]);
 	const purposeStats = useMemo(() => aggregate(readyChoices.map((choice) => choice.selected_purpose)), [readyChoices]);
 	const parsedConditions = useMemo(() => readyChoices.map((choice) => parseCondition(choice.selected_value)), [readyChoices]);
 	const spendingStats = useMemo(() => aggregate(parsedConditions.map((item) => item.spendingStyle)), [parsedConditions]);
 	const distanceStats = useMemo(() => aggregate(parsedConditions.map((item) => item.distance)), [parsedConditions]);
 	const crowdStats = useMemo(() => aggregate(parsedConditions.map((item) => item.crowd)), [parsedConditions]);
-	const budgetStats = useMemo(() => aggregate(parsedConditions.map((item) => String(budgetToScale(item.budget)))), [parsedConditions]);
 	const timeStats = useMemo(() => aggregate(parsedConditions.map((item) => item.time)), [parsedConditions]);
 
 	const topArea = useMemo(() => getRankedEntries(areaStats), [areaStats]);
@@ -275,29 +339,13 @@ export default function GroupSuggestionPage() {
 	const radarAverageValues = useMemo(() => {
 		return toRadarAverageValues(parsedConditions);
 	}, [parsedConditions]);
-	const mismatchTotal = useMemo(() => {
-		const totalVotes = readyChoices.length;
-		if (totalVotes === 0) {
-			return 0;
-		}
-
-		const getMismatchScore = (stats: Record<string, number>) => {
-			const top = Math.max(0, ...Object.values(stats));
-			return Math.round(100 - (top / totalVotes) * 100);
-		};
-
-		const scores = [
-			getMismatchScore(spendingStats),
-			getMismatchScore(distanceStats),
-			getMismatchScore(crowdStats),
-			getMismatchScore(budgetStats),
-			getMismatchScore(timeStats),
-		];
-
-		const sum = scores.reduce((acc, value) => acc + value, 0);
-		return Math.round(sum / scores.length);
-	}, [budgetStats, crowdStats, distanceStats, readyChoices.length, spendingStats, timeStats]);
-	const groupType = useMemo(() => getGroupTypeByMismatch(mismatchTotal), [mismatchTotal]);
+	const radarSeries = useMemo(() => {
+		return orderedReadyChoices.map((choice, index) => ({
+			id: `${choice.user_id}-${index}`,
+			values: toRadarValues(parseCondition(choice.selected_value)),
+			isSelf: choice.user_id === currentUserId,
+		}));
+	}, [currentUserId, orderedReadyChoices]);
 
 	const suggestionCards = useMemo<SuggestionCard[]>(
 		() => {
@@ -307,7 +355,6 @@ export default function GroupSuggestionPage() {
 			const baseCards = [
 				{
 					title: "まずはみんな寄りプラン",
-					catchCopy: `${pickEntry(topSpending, 0, "おまかせ")}に楽しむ王道プラン`,
 					area: firstArea,
 					category: purposeToCategory(pickEntry(topPurpose, 0, "観光")),
 					placeNames: [
@@ -317,14 +364,12 @@ export default function GroupSuggestionPage() {
 				},
 				{
 					title: "バランス重視プラン",
-					catchCopy: `${pickEntry(topDistance, 0, "30分以内")}で巡るちょうどいい休日`,
 					area: secondArea,
 					category: purposeToCategory(pickEntry(topPurpose, 1, pickEntry(topPurpose, 0, "観光"))),
 					placeNames: ["軽めに遊べるスポット", "ゆったりランチ候補"],
 				},
 				{
 					title: "気分転換プラン",
-					catchCopy: `${pickEntry(topCrowd, 0, "ふつう")}×${pickEntry(topTime, 0, "2時間くらい")}で新鮮に`,
 					area: firstArea,
 					category: purposeToCategory(pickEntry(topPurpose, 2, pickEntry(topPurpose, 0, "観光"))),
 					placeNames: ["少し冒険するエリア", "新しい体験スポット"],
@@ -336,7 +381,7 @@ export default function GroupSuggestionPage() {
 				const [firstImage, secondImage] = pickTwoAreaImages(supportedArea, card.category, cardIndex);
 				return {
 					title: card.title,
-					catchCopy: card.catchCopy,
+					catchCopy: pickCatchCopy(card.category, cardIndex),
 					area: supportedArea,
 					places: [
 						{ name: card.placeNames[0], imageSrc: firstImage },
@@ -345,7 +390,7 @@ export default function GroupSuggestionPage() {
 				};
 			});
 		},
-		[rankedSupportedAreas, topCrowd, topDistance, topPurpose, topSpending, topTime],
+		[rankedSupportedAreas, topPurpose],
 	);
 
 	useEffect(() => {
@@ -484,7 +529,7 @@ export default function GroupSuggestionPage() {
 							>
 								<div ref={leftPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-r-3xl">
 									<div className="absolute top-0 right-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
-										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} groupType={groupType} />
+										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} radarSeries={radarSeries} />
 									</div>
 									<button
 										type="button"
@@ -496,13 +541,13 @@ export default function GroupSuggestionPage() {
 
 								<article key={`${activeCard.title}-${activeCardIndex}`} className="w-full">
 									<div ref={activeCardRef}>
-										<SuggestionCardCanvas card={activeCard} radarValues={radarAverageValues} groupType={groupType} />
+										<SuggestionCardCanvas card={activeCard} radarValues={radarAverageValues} radarSeries={radarSeries} />
 									</div>
 								</article>
 
 								<div ref={rightPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-l-3xl">
 									<div className="absolute top-0 left-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
-										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} groupType={groupType} />
+										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} radarSeries={radarSeries} />
 									</div>
 									<button
 										type="button"
