@@ -1,10 +1,10 @@
 // 仮デザイン: 本画面は一時的な暫定UIです（後続で正式デザインへ置き換え予定）。
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function Login() {
@@ -31,11 +31,7 @@ export default function Login() {
 
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
-			<div className="pt-12 pb-8">
-				<Link href="/" className="active:scale-95 transition-transform inline-block">
-					<Image src="/loginlogo.svg" alt="あそぼっか ロゴ" width={180} height={90} priority className="object-contain" />
-				</Link>
-			</div>
+			<TopLogoBar className="pt-12 pb-8" />
 
 			<div className="w-full max-w-112.5 bg-white rounded-t-[60px] grow px-10 pt-12 pb-12 shadow-2xl">
 				<h1 className="text-[#5A7C55] text-center text-2xl font-bold mb-2">ログイン</h1>

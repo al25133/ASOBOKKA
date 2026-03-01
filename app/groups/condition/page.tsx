@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HomeHeaderBar } from '@/components/ui/app-header';
+import { TeamMembersHeader } from '@/components/ui/team-members-header';
 
 // --- 型定義 ---
 interface ConditionState {
@@ -135,17 +136,7 @@ function ConditionPageContent() {
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-hidden select-none">
       <div className="relative z-20 mt-12 w-full shadow-sm">
         <HomeHeaderBar
-          rightSlot={
-            <div className="flex items-center">
-              <div className="flex -space-x-3">
-                {[1, 8, 5].map((id) => (
-                  <div key={id} className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white shadow-md">
-                    <Image src={`/avatars/avatar${id}.svg`} alt="" width={36} height={36} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          }
+          rightSlot={<TeamMembersHeader members={[1, 8, 5].map((id) => ({ user_id: `demo-${id}`, avatar: String(id) }))} />}
         />
       </div>
       <ConditionSelectionContent avatarId={avatarId} />

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { TopLogoBar } from '@/components/ui/app-header';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 export default function Register() {
@@ -88,20 +89,7 @@ export default function Register() {
 
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
-      
-      {/* 上部ロゴエリア */}
-      <div className="pt-12 pb-8">
-        <Link href="/" className="active:scale-95 transition-transform inline-block">
-          <Image 
-            src="/loginlogo.svg" 
-            alt="あそぼっか ロゴ" 
-            width={180} 
-            height={90} 
-            priority
-            className="object-contain"
-          />
-        </Link>
-      </div>
+      <TopLogoBar className="pt-12 pb-8" />
 
       {/* 新規登録カード */}
       <div className="w-full max-w-112.5 bg-white rounded-t-[60px] grow px-10 pt-12 pb-12 shadow-2xl">

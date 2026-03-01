@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { TopLogoBar } from '@/components/ui/app-header';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 type MessageType = 'success' | 'error';
@@ -216,11 +216,7 @@ export default function AccountSettingsPage() {
 
   return (
     <main className="min-h-screen bg-[#D6F8C2] flex flex-col items-center font-sans overflow-x-hidden">
-      <div className="pt-8 pb-5">
-        <Link href="/" className="active:scale-95 transition-transform inline-block">
-          <Image src="/loginlogo.svg" alt="あそぼっか ロゴ" width={150} height={75} priority className="object-contain" />
-        </Link>
-      </div>
+      <TopLogoBar className="pt-8 pb-5" />
 
       <div className="w-full max-w-112.5 bg-white rounded-t-[60px] grow px-8 pt-10 pb-16 shadow-2xl">
         <h1 className="text-[#5A7C55] text-center text-2xl font-bold mb-2">アカウント設定</h1>
