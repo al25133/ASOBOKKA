@@ -46,7 +46,7 @@ type SupportedArea = "渋谷・原宿・表参道" | "新宿・代々木";
 const SUPPORTED_AREAS: SupportedArea[] = ["渋谷・原宿・表参道", "新宿・代々木"];
 
 function buildImagePaths(basePath: string) {
-	return Array.from({ length: 12 }, (_, index) => `${basePath}/${String(index + 1).padStart(2, "0")}.svg`);
+	return Array.from({ length: 6 }, (_, index) => `${basePath}/${String(index + 1).padStart(2, "0")}.svg`);
 }
 
 const AREA_IMAGE_MAP: Record<SupportedArea, Record<SuggestionCategory, string[]>> = {
@@ -165,8 +165,8 @@ function SuggestionCardCanvas({
 	groupType: string;
 }) {
 	return (
-		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140">
-			<div className="h-full grid grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
+		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140 overflow-hidden">
+			<div className="h-full grid grid-cols-3 gap-2.5 sm:gap-3 content-start">
 				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
 						<p className="text-base font-black text-[#389E95] leading-none drop-shadow-sm">{groupType}</p>
@@ -185,13 +185,8 @@ function SuggestionCardCanvas({
 				</div>
 
 				{card.places.map((place) => (
-					<div key={place.name} className="row-span-1 col-span-3 relative overflow-hidden rounded-2xl border border-[#389E95]/25 bg-white">
-						<Image src={place.imageSrc} alt={place.name} fill className="object-cover opacity-85" />
-						<div className="absolute inset-0 bg-white/35" />
-						<div className="absolute inset-0 flex items-center justify-between px-3 sm:px-3.5">
-							<p className="text-xs sm:text-sm font-bold text-[#2F6E68] drop-shadow-sm">{place.name}</p>
-							<span className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold text-[#389E95] drop-shadow-sm">画像差し替え予定</span>
-						</div>
+					<div key={place.name} className="col-span-3 relative overflow-hidden rounded-2xl border border-[#389E95]/25 bg-white aspect-3/2">
+						<Image src={place.imageSrc} alt={place.name} fill className="object-contain object-top" />
 					</div>
 				))}
 			</div>
@@ -488,7 +483,7 @@ export default function GroupSuggestionPage() {
 								}}
 							>
 								<div ref={leftPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-r-3xl">
-									<div className="absolute top-0 right-0 h-full w-140 sm:w-155 pointer-events-none">
+									<div className="absolute top-0 right-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
 										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 									<button
@@ -506,7 +501,7 @@ export default function GroupSuggestionPage() {
 								</article>
 
 								<div ref={rightPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-l-3xl">
-									<div className="absolute top-0 left-0 h-full w-140 sm:w-155 pointer-events-none">
+									<div className="absolute top-0 left-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
 										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 									<button
