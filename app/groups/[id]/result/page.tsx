@@ -6,8 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { AccountMenu } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
+import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
 	aggregate,
@@ -236,7 +236,6 @@ export default function GroupResult() {
 	const params = useParams<{ id: string }>();
 	const router = useRouter();
 	const passcode = params.id;
-	const [avatarId, setAvatarId] = useState("1");
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
@@ -254,10 +253,6 @@ export default function GroupResult() {
 				supabase.auth.getSession(),
 			]);
 			setCurrentUserId(authData.user?.id ?? null);
-			const avatar = authData.user?.user_metadata?.avatar;
-			if (typeof avatar === "number" || typeof avatar === "string") {
-				setAvatarId(String(avatar));
-			}
 			const accessToken = sessionData.session?.access_token;
 
 			const { data: groupData, error: groupError } = await supabase.rpc("find_group_by_passcode", {
@@ -466,7 +461,7 @@ export default function GroupResult() {
 
 			<div className="relative w-full">
 				<TopLogoBar className="bg-[#D6F8C2]" />
-				<HomeHeaderBar rightSlot={<AccountMenu avatarId={avatarId} />} />
+				<HomeHeaderBar rightSlot={<TeamMembersHeader passcode={passcode} />} />
 				<div className="pointer-events-none absolute inset-0 z-30 bg-black/35" aria-hidden />
 			</div>
 

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { TopLogoBar } from "@/components/ui/app-header";
+import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -85,14 +85,15 @@ export default function GroupWaitingCompletePage() {
 	return (
 		<main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-x-hidden">
 			<TopLogoBar className="bg-[#D6F8C2]" />
-			<header className="relative z-30 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] shadow-sm">
-				<Link href="/groups">
-					<Image src="/homelogo.svg" alt="home" width={32} height={32} />
-				</Link>
-				<div className="ml-auto">
-					<TeamMembersHeader passcode={passcode} />
-				</div>
-			</header>
+			<HomeHeaderBar
+				href="/groups"
+				className="z-30 shadow-sm"
+				rightSlot={
+					<div className="ml-auto">
+						<TeamMembersHeader passcode={passcode} />
+					</div>
+				}
+			/>
 
 			<section className="w-full flex-1 flex flex-col items-center justify-center px-6 pb-20">
 				<Image src="/足跡上.svg" alt="足跡" width={120} height={90} className="object-contain" />

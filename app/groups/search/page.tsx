@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { AccountMenu } from '@/components/ui/account-menu';
-import { TopLogoBar } from '@/components/ui/app-header';
+import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
 
 export default function GroupSearch() {
   const router = useRouter();
@@ -59,14 +59,15 @@ export default function GroupSearch() {
       <TopLogoBar className="bg-[#D6F8C2]" rightSlot={<div />} />
 
       {/* 🟢 2. ヘッダーバー */}
-      <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] shadow-sm">
-        <Link href="/">
-          <Image src="/homelogo.svg" alt="home" width={32} height={32} />
-        </Link>
-        <div className="ml-auto">
-          <AccountMenu avatarId={avatarId} />
-        </div>
-      </header>
+      <HomeHeaderBar
+        href="/"
+        className="shadow-sm"
+        rightSlot={
+          <div className="ml-auto">
+            <AccountMenu avatarId={avatarId} />
+          </div>
+        }
+      />
 
       {/* 🐾 メインコンテンツ */}
       <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-24 px-10 pb-40">

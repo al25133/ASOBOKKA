@@ -9,6 +9,8 @@ interface TopLogoBarProps {
 
 interface HomeHeaderBarProps {
   rightSlot: ReactNode;
+  href?: string;
+  className?: string;
 }
 
 export function TopLogoBar({ rightSlot, className = '' }: TopLogoBarProps) {
@@ -22,10 +24,10 @@ export function TopLogoBar({ rightSlot, className = '' }: TopLogoBarProps) {
   );
 }
 
-export function HomeHeaderBar({ rightSlot }: HomeHeaderBarProps) {
+export function HomeHeaderBar({ rightSlot, href = '/', className = '' }: HomeHeaderBarProps) {
   return (
-    <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76]">
-      <Link href="/" className="active:scale-90 transition-transform">
+    <header className={`relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] ${className}`.trim()}>
+      <Link href={href} className="active:scale-90 transition-transform">
         <Image src="/homelogo.svg" alt="ホーム" width={32} height={32} />
       </Link>
       {rightSlot}
