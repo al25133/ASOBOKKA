@@ -159,7 +159,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
 			return;
 		}
 
-		router.push(`/groups/${passcode}/result`);
+		router.push(`/groups/${passcode}/waiting`);
 	};
 
 	if (initializing) {
@@ -249,7 +249,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
 					disabled={saving}
 					className={`flex-1 bg-white rounded-2xl py-3 text-center transition-all ${saving ? "opacity-30 grayscale pointer-events-none" : "active:scale-95"}`}
 				>
-					<span className="text-[#389E95] font-black tracking-widest text-sm">結果表示</span>
+					<span className="text-[#389E95] font-black tracking-widest text-sm">待機へ</span>
 				</button>
 			</div>
 			<div className="fixed bottom-0 left-0 w-full h-44 bg-white rounded-t-[120px] z-0 pointer-events-none shadow-[0_-10px_40px_rgba(0,0,0,0.05)]"></div>

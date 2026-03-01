@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
@@ -13,6 +13,7 @@ type MemberChoice = {
 	selected_area: string | null;
 	selected_purpose: string | null;
 	selected_value: string | null;
+	is_ready: boolean | null;
 };
 
 type ParsedCondition = {
@@ -144,9 +145,9 @@ function pickEntry(entries: Array<[string, number]>, index: number, fallback: st
 }
 
 function SuggestionRadarChart({ values }: { values: number[] }) {
-	const size = 148;
+	const size = 170;
 	const center = size / 2;
-	const maxRadius = 52;
+	const maxRadius = 60;
 	const rings = [1, 2, 3, 4, 5];
 	const axisCount = radarAxes.length;
 
@@ -170,7 +171,7 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 
 	return (
 		<div className="w-full h-full flex items-start justify-center overflow-hidden">
-			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="結果グラフ" className="drop-shadow-sm">
+			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ" className="drop-shadow-sm">
 				{rings.map((ring) => {
 					const points = radarAxes
 						.map((_, index) => {
@@ -178,16 +179,34 @@ function SuggestionRadarChart({ values }: { values: number[] }) {
 							return `${point.x},${point.y}`;
 						})
 						.join(" ");
-					return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.26" strokeWidth={1.1} />;
+					return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
 				})}
 
 				{radarAxes.map((_, index) => {
 					const point = toPoint(5, index);
-					return <line key={`axis-${index}`} x1={center} y1={center} x2={point.x} y2={point.y} stroke="#389E95" strokeOpacity="0.32" />;
+					return <line key={`axis-${index}`} x1={center} y1={center} x2={point.x} y2={point.y} stroke="#389E95" strokeOpacity="0.35" />;
 				})}
 
-				<polygon points={polygonPoints} fill="#389E95" fillOpacity={0.24} stroke="#389E95" strokeWidth={2} strokeLinejoin="round" />
-				<circle cx={center} cy={center} r={2.8} fill="#389E95" />
+				<polygon points={polygonPoints} fill="#389E95" fillOpacity={0.28} stroke="#389E95" strokeWidth={2.5} strokeLinejoin="round" />
+				<circle cx={center} cy={center} r={4} fill="#389E95" />
+
+				{radarAxes.map((axis, index) => {
+					const point = toPoint(5.62, index, false);
+					return (
+						<text
+							key={`label-${axis}`}
+							x={point.x}
+							y={point.y}
+							fontSize="9"
+							fontWeight="700"
+							fill="#389E95"
+							textAnchor="middle"
+							dominantBaseline="middle"
+						>
+							{axis}
+						</text>
+					);
+				})}
 			</svg>
 		</div>
 	);
@@ -239,6 +258,7 @@ function SuggestionCardCanvas({
 
 export default function GroupSuggestionPage() {
 	const params = useParams<{ id: string }>();
+	const router = useRouter();
 	const passcode = params.id;
 	const [loading, setLoading] = useState(true);
 	const [choices, setChoices] = useState<MemberChoice[]>([]);
@@ -266,7 +286,7 @@ export default function GroupSuggestionPage() {
 
 			const { data, error } = await supabase
 				.from("group_members")
-				.select("selected_area, selected_purpose, selected_value")
+				.select("selected_area, selected_purpose, selected_value, is_ready")
 				.eq("group_id", groupData[0].group_id);
 
 			setLoading(false);
@@ -274,15 +294,27 @@ export default function GroupSuggestionPage() {
 				setMessage(error.message);
 				return;
 			}
-			setChoices(data ?? []);
+
+			const rows = data ?? [];
+			const allReady = rows.length > 0 && rows.every((row) => Boolean(row.is_ready && row.selected_value));
+			if (!allReady) {
+				router.replace(`/groups/${passcode}/waiting`);
+				return;
+			}
+
+			setChoices(rows);
 		};
 
 		void load();
-	}, [passcode]);
+	}, [passcode, router]);
 
-	const areaStats = useMemo(() => aggregate(choices.map((choice) => choice.selected_area)), [choices]);
-	const purposeStats = useMemo(() => aggregate(choices.map((choice) => choice.selected_purpose)), [choices]);
-	const parsedConditions = useMemo(() => choices.map((choice) => parseCondition(choice.selected_value)), [choices]);
+	const completedChoices = useMemo(
+		() => choices.filter((choice) => Boolean(choice.is_ready && choice.selected_value)),
+		[choices],
+	);
+	const areaStats = useMemo(() => aggregate(completedChoices.map((choice) => choice.selected_area)), [completedChoices]);
+	const purposeStats = useMemo(() => aggregate(completedChoices.map((choice) => choice.selected_purpose)), [completedChoices]);
+	const parsedConditions = useMemo(() => completedChoices.map((choice) => parseCondition(choice.selected_value)), [completedChoices]);
 	const spendingStats = useMemo(() => aggregate(parsedConditions.map((item) => item.spendingStyle)), [parsedConditions]);
 	const distanceStats = useMemo(() => aggregate(parsedConditions.map((item) => item.distance)), [parsedConditions]);
 	const crowdStats = useMemo(() => aggregate(parsedConditions.map((item) => item.crowd)), [parsedConditions]);
@@ -314,7 +346,7 @@ export default function GroupSuggestionPage() {
 		});
 	}, [parsedConditions]);
 	const mismatchTotal = useMemo(() => {
-		const totalVotes = choices.length;
+		const totalVotes = completedChoices.length;
 		if (totalVotes === 0) {
 			return 0;
 		}
@@ -334,7 +366,7 @@ export default function GroupSuggestionPage() {
 
 		const sum = scores.reduce((acc, value) => acc + value, 0);
 		return Math.round(sum / scores.length);
-	}, [budgetStats, choices.length, crowdStats, distanceStats, spendingStats, timeStats]);
+	}, [budgetStats, completedChoices.length, crowdStats, distanceStats, spendingStats, timeStats]);
 	const groupType = useMemo(() => getGroupTypeByMismatch(mismatchTotal), [mismatchTotal]);
 
 	const suggestionCards = useMemo<SuggestionCard[]>(
@@ -490,9 +522,9 @@ export default function GroupSuggestionPage() {
 				</div>
 				{message ? <p className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">{message}</p> : null}
 
-				{choices.length === 0 ? (
+				{completedChoices.length === 0 ? (
 					<p className="rounded-2xl border border-[#389E95]/20 bg-[#F9FBF9] p-4 text-sm text-[#5A7C55]">
-						まだメンバーの回答がありません。
+						まだ条件入力が完了したメンバーがいません。
 					</p>
 				) : (
 					<div className="space-y-3 sm:space-y-4">

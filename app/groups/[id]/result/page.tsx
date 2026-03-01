@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { toPng } from "html-to-image";
@@ -15,6 +15,7 @@ type MemberChoice = {
 	selected_area: string | null;
 	selected_purpose: string | null;
 	selected_value: string | null;
+	is_ready: boolean | null;
 };
 
 type RadarAxis = {
@@ -209,16 +210,6 @@ function RadarChart({
 	return (
 		<div className="w-full flex justify-center">
 			   <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ">
-				   <defs>
-					   <radialGradient id="radar-bg-gradient" cx="50%" cy="50%" r="50%">
-						   <stop offset="0%" stop-color="#fff" />
-						   <stop offset="100%" stop-color="#B6F2A2" />
-					   </radialGradient>
-					   <filter id="circle-shadow" x="-30%" y="-30%" width="160%" height="160%">
-						   <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#389E95" floodOpacity="0.25" />
-					   </filter>
-				   </defs>
-				   <circle cx={center} cy={center} r={maxRadius} fill="url(#radar-bg-gradient)" />
 				   {rings.map((ring) => {
 					   const points = axes
 						   .map((_, index) => {
@@ -226,15 +217,6 @@ function RadarChart({
 							   return `${point.x},${point.y}`;
 						   })
 						   .join(" ");
-					   // 五角形の頂点を通る円（最外周のみ）
-					   if (ring === 5) {
-						   const first = toPoint(ring, 0);
-						   const radius = Math.sqrt(Math.pow(first.x - center, 2) + Math.pow(first.y - center, 2));
-						   return <g key={ring}>
-							   <polygon points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />
-							   <circle cx={center} cy={center} r={radius} fill="none" stroke="#fff" strokeWidth={2.2} filter="url(#circle-shadow)" />
-						   </g>;
-					   }
 					   return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
 				   })}
 
@@ -322,6 +304,7 @@ function RadarChart({
 
 export default function GroupResult() {
 	const params = useParams<{ id: string }>();
+	const router = useRouter();
 	const passcode = params.id;
 	const [avatarId, setAvatarId] = useState("1");
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -384,7 +367,7 @@ export default function GroupResult() {
 
 			const { data, error } = await supabase
 				.from("group_members")
-				.select("user_id, selected_area, selected_purpose, selected_value")
+				.select("user_id, selected_area, selected_purpose, selected_value, is_ready")
 				.eq("group_id", groupData[0].group_id);
 
 			setLoading(false);
@@ -392,20 +375,33 @@ export default function GroupResult() {
 				setMessage(error.message);
 				return;
 			}
-			setChoices(data ?? []);
+
+			const rows = data ?? [];
+			const allReady = rows.length > 0 && rows.every((row) => Boolean(row.is_ready && row.selected_value));
+			if (!allReady) {
+				router.replace(`/groups/${passcode}/waiting`);
+				return;
+			}
+
+			setChoices(rows);
 		};
 
 		void load();
-	}, [passcode]);
+	}, [passcode, router]);
+
+	const completedChoices = useMemo(
+		() => choices.filter((choice) => Boolean(choice.is_ready && choice.selected_value)),
+		[choices],
+	);
 
 	const orderedChoices = useMemo(() => {
 		if (!currentUserId) {
-			return choices;
+			return completedChoices;
 		}
-		const self = choices.filter((choice) => choice.user_id === currentUserId);
-		const others = choices.filter((choice) => choice.user_id !== currentUserId);
+		const self = completedChoices.filter((choice) => choice.user_id === currentUserId);
+		const others = completedChoices.filter((choice) => choice.user_id !== currentUserId);
 		return [...self, ...others];
-	}, [choices, currentUserId]);
+	}, [completedChoices, currentUserId]);
 
 	const parsedConditions = useMemo(() => orderedChoices.map((choice) => parseCondition(choice.selected_value)), [orderedChoices]);
 	const spendingStats = useMemo(() => aggregate(parsedConditions.map((item) => item.spendingStyle)), [parsedConditions]);
@@ -547,9 +543,9 @@ export default function GroupResult() {
 					</p>
 				) : null}
 
-				{choices.length === 0 ? (
+				{orderedChoices.length === 0 ? (
 					<p className="rounded-2xl border border-[#389E95]/20 bg-[#F9FBF9] p-4 text-sm text-[#5A7C55]">
-						まだメンバーの回答がありません。
+						まだ条件入力が完了したメンバーがいません。
 					</p>
 				) : (
 					<div className="w-full max-w-md space-y-5">
