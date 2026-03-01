@@ -39,6 +39,29 @@ type SuggestionCard = {
 	places: SuggestionPlace[];
 };
 
+type SuggestionCategory = "shopping" | "outdoor-nature-sightseeing";
+
+type SupportedArea = "渋谷・原宿・表参道" | "新宿・代々木";
+
+const SUPPORTED_AREAS: SupportedArea[] = ["渋谷・原宿・表参道", "新宿・代々木"];
+
+function buildImagePaths(basePath: string) {
+	return Array.from({ length: 12 }, (_, index) => `${basePath}/${String(index + 1).padStart(2, "0")}.svg`);
+}
+
+const AREA_IMAGE_MAP: Record<SupportedArea, Record<SuggestionCategory, string[]>> = {
+	"渋谷・原宿・表参道": {
+		shopping: buildImagePaths("/suggestion/shibuya-harajuku-omotesando/shopping"),
+		"outdoor-nature-sightseeing": buildImagePaths("/suggestion/shibuya-harajuku-omotesando/outdoor-nature-sightseeing"),
+	},
+	"新宿・代々木": {
+		shopping: buildImagePaths("/suggestion/shinjuku-yoyogi/shopping"),
+		"outdoor-nature-sightseeing": buildImagePaths("/suggestion/shinjuku-yoyogi/outdoor-nature-sightseeing"),
+	},
+};
+
+const DEFAULT_AREA = SUPPORTED_AREAS[0];
+
 const radarAxes = ["過ごし方", "距離", "人の多さ", "予算", "時間"];
 
 function getGroupTypeByMismatch(score: number) {
@@ -54,25 +77,32 @@ function getGroupTypeByMismatch(score: number) {
 	return "チャレンジ型";
 }
 
-function purposeToImage(purpose: string) {
-	const map: Record<string, string> = {
-		ごはん: "/purpose/meal.svg",
-		カフェ: "/purpose/cafe.svg",
-		観光: "/purpose/sightseeing.svg",
-		ショッピング: "/purpose/shopping.svg",
-		アクティビティ: "/purpose/outdoor.svg",
-	};
-
-	return map[purpose] ?? "/purpose/sightseeing.svg";
-}
-
-
 function getRankedEntries(stats: Record<string, number>) {
 	return Object.entries(stats).sort((a, b) => b[1] - a[1]);
 }
 
 function pickEntry(entries: Array<[string, number]>, index: number, fallback: string) {
 	return entries[index]?.[0] ?? entries[0]?.[0] ?? fallback;
+}
+
+function toSupportedArea(area: string): SupportedArea {
+	if (area === "渋谷・原宿・表参道" || area === "新宿・代々木") {
+		return area;
+	}
+	return DEFAULT_AREA;
+}
+
+function purposeToCategory(purpose: string): SuggestionCategory {
+	if (purpose === "ショッピング") {
+		return "shopping";
+	}
+	return "outdoor-nature-sightseeing";
+}
+
+function pickTwoAreaImages(area: SupportedArea, category: SuggestionCategory, cardIndex: number) {
+	const areaImages = AREA_IMAGE_MAP[area][category];
+	const startIndex = (cardIndex * 2) % areaImages.length;
+	return [areaImages[startIndex], areaImages[(startIndex + 1) % areaImages.length]];
 }
 
 function SuggestionRadarChart({ values }: { values: number[] }) {
@@ -241,6 +271,12 @@ export default function GroupSuggestionPage() {
 	const topDistance = useMemo(() => getRankedEntries(distanceStats), [distanceStats]);
 	const topCrowd = useMemo(() => getRankedEntries(crowdStats), [crowdStats]);
 	const topTime = useMemo(() => getRankedEntries(timeStats), [timeStats]);
+	const rankedSupportedAreas = useMemo<SupportedArea[]>(() => {
+		const fromVotes = topArea
+			.map(([area]) => area)
+			.filter((area): area is SupportedArea => area === "渋谷・原宿・表参道" || area === "新宿・代々木");
+		return Array.from(new Set([...fromVotes, ...SUPPORTED_AREAS]));
+	}, [topArea]);
 	const radarAverageValues = useMemo(() => {
 		return toRadarAverageValues(parsedConditions);
 	}, [parsedConditions]);
@@ -269,39 +305,52 @@ export default function GroupSuggestionPage() {
 	const groupType = useMemo(() => getGroupTypeByMismatch(mismatchTotal), [mismatchTotal]);
 
 	const suggestionCards = useMemo<SuggestionCard[]>(
-		() => [
-			{
-				title: "まずはみんな寄りプラン",
-				catchCopy: `${pickEntry(topSpending, 0, "おまかせ")}に楽しむ王道プラン`,
-				area: pickEntry(topArea, 0, "都内"),
-				places: [
-					{ name: `${pickEntry(topArea, 0, "都内")}の人気スポット`, imageSrc: purposeToImage(pickEntry(topPurpose, 0, "観光")) },
-					{ name: `${pickEntry(topArea, 0, "都内")}の定番カフェ`, imageSrc: "/purpose/cafe.svg" },
-					{ name: `${pickEntry(topArea, 0, "都内")}の寄り道エリア`, imageSrc: "/purpose/sightseeing.svg" },
-				],
-			},
-			{
-				title: "バランス重視プラン",
-				catchCopy: `${pickEntry(topDistance, 0, "30分以内")}で巡るちょうどいい休日`,
-				area: pickEntry(topArea, 1, pickEntry(topArea, 0, "都内")),
-				places: [
-					{ name: "軽めに遊べるスポット", imageSrc: "/purpose/entartainment.svg" },
-					{ name: "ゆったりランチ候補", imageSrc: "/purpose/meal.svg" },
-					{ name: "散歩しやすい街並み", imageSrc: purposeToImage(pickEntry(topPurpose, 1, pickEntry(topPurpose, 0, "観光"))) },
-				],
-			},
-			{
-				title: "気分転換プラン",
-				catchCopy: `${pickEntry(topCrowd, 0, "ふつう")}×${pickEntry(topTime, 0, "2時間くらい")}で新鮮に`,
-				area: pickEntry(topArea, 2, pickEntry(topArea, 0, "都内")),
-				places: [
-					{ name: "少し冒険するエリア", imageSrc: "/purpose/outdoor.svg" },
-					{ name: "新しい体験スポット", imageSrc: "/purpose/handmade.svg" },
-					{ name: "最後に寄れる休憩場所", imageSrc: "/purpose/museum.svg" },
-				],
-			},
-		],
-		[topArea, topCrowd, topDistance, topPurpose, topSpending, topTime],
+		() => {
+			const firstArea = rankedSupportedAreas[0] ?? DEFAULT_AREA;
+			const secondArea = rankedSupportedAreas[1] ?? firstArea;
+
+			const baseCards = [
+				{
+					title: "まずはみんな寄りプラン",
+					catchCopy: `${pickEntry(topSpending, 0, "おまかせ")}に楽しむ王道プラン`,
+					area: firstArea,
+					category: purposeToCategory(pickEntry(topPurpose, 0, "観光")),
+					placeNames: [
+						`${firstArea}の人気スポット`,
+						`${firstArea}の定番スポット`,
+					],
+				},
+				{
+					title: "バランス重視プラン",
+					catchCopy: `${pickEntry(topDistance, 0, "30分以内")}で巡るちょうどいい休日`,
+					area: secondArea,
+					category: purposeToCategory(pickEntry(topPurpose, 1, pickEntry(topPurpose, 0, "観光"))),
+					placeNames: ["軽めに遊べるスポット", "ゆったりランチ候補"],
+				},
+				{
+					title: "気分転換プラン",
+					catchCopy: `${pickEntry(topCrowd, 0, "ふつう")}×${pickEntry(topTime, 0, "2時間くらい")}で新鮮に`,
+					area: firstArea,
+					category: purposeToCategory(pickEntry(topPurpose, 2, pickEntry(topPurpose, 0, "観光"))),
+					placeNames: ["少し冒険するエリア", "新しい体験スポット"],
+				},
+			];
+
+			return baseCards.map((card, cardIndex) => {
+				const supportedArea = toSupportedArea(card.area);
+				const [firstImage, secondImage] = pickTwoAreaImages(supportedArea, card.category, cardIndex);
+				return {
+					title: card.title,
+					catchCopy: card.catchCopy,
+					area: supportedArea,
+					places: [
+						{ name: card.placeNames[0], imageSrc: firstImage },
+						{ name: card.placeNames[1], imageSrc: secondImage },
+					],
+				};
+			});
+		},
+		[rankedSupportedAreas, topCrowd, topDistance, topPurpose, topSpending, topTime],
 	);
 
 	useEffect(() => {
