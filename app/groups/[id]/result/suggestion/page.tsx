@@ -162,6 +162,13 @@ function SuggestionRadarChart({
 			y: center + Math.sin(angle) * radius,
 		};
 	};
+	const axisLabelPositions = [
+		{ top: "9%", left: "50%", className: "-translate-x-1/2" },
+		{ top: "30%", left: "83%", className: "-translate-x-1/2 -translate-y-1/2" },
+		{ top: "73%", left: "74%", className: "-translate-x-1/2 -translate-y-1/2" },
+		{ top: "73%", left: "26%", className: "-translate-x-1/2 -translate-y-1/2" },
+		{ top: "30%", left: "17%", className: "-translate-x-1/2 -translate-y-1/2" },
+	] as const;
 
 	const averagePoints = values
 		.map((value, index) => {
@@ -171,7 +178,7 @@ function SuggestionRadarChart({
 		.join(" ");
 
 	return (
-		<div className="w-full h-full flex items-start justify-center overflow-hidden">
+		<div className="relative w-full h-full flex items-start justify-center overflow-hidden">
 			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="結果グラフ" className="drop-shadow-sm">
 				{rings.map((ring) => {
 					const points = radarAxes
@@ -225,6 +232,20 @@ function SuggestionRadarChart({
 				})}
 				<circle cx={center} cy={center} r={2.8} fill="#389E95" />
 			</svg>
+			<div className="absolute inset-0 z-10 pointer-events-none">
+				{radarAxes.map((axisLabel, index) => (
+				<span
+					key={`axis-html-label-${axisLabel}`}
+					className={`absolute text-[9px] leading-none font-bold text-[#2F6E68] whitespace-nowrap ${axisLabelPositions[index]?.className ?? "-translate-x-1/2 -translate-y-1/2"}`}
+					style={{
+						left: axisLabelPositions[index]?.left ?? "50%",
+						top: axisLabelPositions[index]?.top ?? "50%",
+					}}
+				>
+					{axisLabel}
+				</span>
+				))}
+			</div>
 		</div>
 	);
 }
