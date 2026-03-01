@@ -22,6 +22,9 @@ function AreaSelectionContent({ passcode }: { passcode: string }) {
     const steps = ["ホーム", "場所", "目的", "条件"];
     const currentStepIndex = 1; 
 
+    // ✅ 選択可能なエリアを制限
+    const allowedAreas = ["渋谷・原宿・表参道", "新宿・代々木"];
+
     useEffect(() => {
         const initialize = async () => {
             const supabase = getSupabaseClient();
@@ -113,7 +116,8 @@ function AreaSelectionContent({ passcode }: { passcode: string }) {
                         </div>
                         <div className="space-y-3 max-h-100 overflow-y-auto pr-1">
                             {areaData[selectedRegion][selectedPref].map((area) => {
-                                const isEnabled = selectedPref === "東京";
+                                // 渋谷・原宿・表参道 と 新宿・代々木 だけを有効にする
+                                const isEnabled = allowedAreas.includes(area);
                                 return (
                                     <button
                                         key={area}
@@ -126,7 +130,7 @@ function AreaSelectionContent({ passcode }: { passcode: string }) {
                                         className={`w-full text-left text-base font-bold py-5 px-4 rounded-xl flex items-center justify-between transition-all
                                             ${isEnabled 
                                                 ? "text-[#5A5A5A] border-b-2 border-[#D6F8C2]/30 active:bg-[#D6F8C2]/10" 
-                                                : "text-[#BABABA]/40 bg-gray-50/30 cursor-not-allowed border-none opacity-60"}`}
+                                                : "text-[#BABABA]/40 bg-gray-50/30 cursor-not-allowed border-none opacity-50"}`}
                                     >
                                         <div className="flex items-center gap-4">
                                             <span className={`w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center ${isEnabled ? "border-[#389E95]/30" : "border-gray-200"}`}>
@@ -141,15 +145,29 @@ function AreaSelectionContent({ passcode }: { passcode: string }) {
                         </div>
                     </div>
                 );
-            case "result":
+          case "result":
                 return (
-                    <div className="w-full flex flex-col items-center justify-center pt-4 pb-10">
-                        <div className="w-full bg-white border-[6px] border-[#389E95] rounded-[45px] p-10 flex flex-col items-center gap-5 shadow-2xl text-center relative overflow-hidden animate-in fade-in slide-in-from-top-40 duration-700 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]">
-                            <span className="text-6xl mb-2 drop-shadow-sm">📍</span>
-                            <div className="flex flex-col gap-2">
-                                <span className="text-[#BABABA] text-base font-bold tracking-widest uppercase">{selectedPref}</span>
-                                <span className="text-[#389E95] text-3xl font-bold tracking-wider leading-tight">{selectedArea}</span>
+                    <div className="w-full flex flex-col items-center justify-center pt-8 pb-16">
+                        
+                        {/* 🟠 ✅ 四隅の穴を削除し、アニメーションを「じわっと」した動きに強化 */}
+                        {/* slide-in-from-top-80 でより高い位置から、duration-1200 でゆっくり降ろします */}
+                        <div className="w-full max-w-[320px] aspect-square bg-white border-8 border-[#389E95] rounded-[45px] flex flex-col items-center justify-center gap-6 shadow-2xl text-center relative overflow-hidden
+                            animate-in fade-in slide-in-from-top-80 duration-[1200ms] ease-out">
+                            
+                            {/* ピンアイコン */}
+                            <span className="text-7xl mb-1 drop-shadow-sm">📍</span>
+                            
+                            <div className="flex flex-col gap-2 px-4">
+                                {/* 都道府県 */}
+                                <span className="text-[#BABABA] text-sm font-bold tracking-[0.2em] uppercase">
+                                    {selectedPref}
+                                </span>
+                                {/* エリア名 */}
+                                <span className="text-[#2D7D76] text-3xl font-black tracking-wider leading-tight drop-shadow-sm">
+                                    {selectedArea}
+                                </span>
                             </div>
+
                         </div>
                     </div>
                 );
@@ -159,7 +177,6 @@ function AreaSelectionContent({ passcode }: { passcode: string }) {
     return (
         <div className="w-full flex flex-col items-center select-none relative bg-[#D6F8C2]">
             
-            {/* 🟢 プログレスバーエリア */}
             <div className="w-full bg-[#D6F8C2] pt-10 pb-10 px-10 flex flex-col items-center relative z-20">
                 <div className="w-full max-w-80 flex justify-between items-start relative shrink-0 min-h-12.5">
                     <div className="absolute top-1.75 left-0 w-full h-0.5 flex items-center px-4">
@@ -183,21 +200,25 @@ function AreaSelectionContent({ passcode }: { passcode: string }) {
                 </div>
             </div>
 
-            {/* 🐾 メインコンテンツ（白いカード） */}
+            {/* 🐾 メインコンテンツエリア */}
             <div className="w-full grow px-6 pb-44 relative z-10">
-                <div className="w-full max-w-100.5 mx-auto bg-white rounded-[40px] p-8 shadow-xl min-h-100">
-                    {renderContent()}
-                </div>
+                {step === "result" ? (
+                    // ✅ 確認画面：白カードをなくして中央に配置（ここは renderContent で制御するように戻しました）
+                    renderContent()
+                ) : (
+                    // 選択中：白いカードを表示
+                    <div className="w-full max-w-100.5 mx-auto bg-white rounded-[40px] p-8 shadow-xl min-h-100">
+                        {renderContent()}
+                    </div>
+                )}
             </div>
 
-            {/* 🔘 固定ナビゲーション */}
             <div className="fixed bottom-10 z-40 w-full max-w-90 bg-[#52A399] rounded-[30px] p-3 shadow-2xl flex justify-between gap-3 mx-auto border-t border-white/10">
                 <button
                     onClick={() => {
                         if (step === "result") setStep("area");
                         else if (step === "area") setStep("pref");
                         else if (step === "pref") setStep("region");
-                        // ✅ ここを修正：URL指定ではなく history.back() で戻ることで、番号の再発行を防ぐ
                         else router.back(); 
                     }}
                     className="flex-1 bg-white rounded-2xl py-3.5 flex items-center justify-center active:scale-95 transition-all shadow-sm text-[#389E95] font-bold text-base"
