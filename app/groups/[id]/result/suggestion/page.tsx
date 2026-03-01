@@ -39,6 +39,29 @@ type SuggestionCard = {
 	places: SuggestionPlace[];
 };
 
+type SuggestionCategory = "shopping" | "outdoor-nature-sightseeing";
+
+type SupportedArea = "渋谷・原宿・表参道" | "新宿・代々木";
+
+const SUPPORTED_AREAS: SupportedArea[] = ["渋谷・原宿・表参道", "新宿・代々木"];
+
+function buildImagePaths(basePath: string) {
+	return Array.from({ length: 6 }, (_, index) => `${basePath}/${String(index + 1).padStart(2, "0")}.svg`);
+}
+
+const AREA_IMAGE_MAP: Record<SupportedArea, Record<SuggestionCategory, string[]>> = {
+	"渋谷・原宿・表参道": {
+		shopping: buildImagePaths("/suggestion/shibuya-harajuku-omotesando/shopping"),
+		"outdoor-nature-sightseeing": buildImagePaths("/suggestion/shibuya-harajuku-omotesando/outdoor-nature-sightseeing"),
+	},
+	"新宿・代々木": {
+		shopping: buildImagePaths("/suggestion/shinjuku-yoyogi/shopping"),
+		"outdoor-nature-sightseeing": buildImagePaths("/suggestion/shinjuku-yoyogi/outdoor-nature-sightseeing"),
+	},
+};
+
+const DEFAULT_AREA = SUPPORTED_AREAS[0];
+
 const radarAxes = ["過ごし方", "距離", "人の多さ", "予算", "時間"];
 
 function getGroupTypeByMismatch(score: number) {
@@ -54,25 +77,32 @@ function getGroupTypeByMismatch(score: number) {
 	return "チャレンジ型";
 }
 
-function purposeToImage(purpose: string) {
-	const map: Record<string, string> = {
-		ごはん: "/purpose/meal.svg",
-		カフェ: "/purpose/cafe.svg",
-		観光: "/purpose/sightseeing.svg",
-		ショッピング: "/purpose/shopping.svg",
-		アクティビティ: "/purpose/outdoor.svg",
-	};
-
-	return map[purpose] ?? "/purpose/sightseeing.svg";
-}
-
-
 function getRankedEntries(stats: Record<string, number>) {
 	return Object.entries(stats).sort((a, b) => b[1] - a[1]);
 }
 
 function pickEntry(entries: Array<[string, number]>, index: number, fallback: string) {
 	return entries[index]?.[0] ?? entries[0]?.[0] ?? fallback;
+}
+
+function toSupportedArea(area: string): SupportedArea {
+	if (area === "渋谷・原宿・表参道" || area === "新宿・代々木") {
+		return area;
+	}
+	return DEFAULT_AREA;
+}
+
+function purposeToCategory(purpose: string): SuggestionCategory {
+	if (purpose === "ショッピング") {
+		return "shopping";
+	}
+	return "outdoor-nature-sightseeing";
+}
+
+function pickTwoAreaImages(area: SupportedArea, category: SuggestionCategory, cardIndex: number) {
+	const areaImages = AREA_IMAGE_MAP[area][category];
+	const startIndex = (cardIndex * 2) % areaImages.length;
+	return [areaImages[startIndex], areaImages[(startIndex + 1) % areaImages.length]];
 }
 
 function SuggestionRadarChart({ values }: { values: number[] }) {
@@ -135,8 +165,8 @@ function SuggestionCardCanvas({
 	groupType: string;
 }) {
 	return (
-		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140">
-			<div className="h-full grid grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
+		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140 overflow-hidden">
+			<div className="h-full grid grid-cols-3 gap-2.5 sm:gap-3 content-start">
 				<div className="row-span-1 col-span-3 px-0 py-0 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
 						<p className="text-base font-black text-[#389E95] leading-none drop-shadow-sm">{groupType}</p>
@@ -155,13 +185,8 @@ function SuggestionCardCanvas({
 				</div>
 
 				{card.places.map((place) => (
-					<div key={place.name} className="row-span-1 col-span-3 relative overflow-hidden rounded-2xl border border-[#389E95]/25 bg-white">
-						<Image src={place.imageSrc} alt={place.name} fill className="object-cover opacity-85" />
-						<div className="absolute inset-0 bg-white/35" />
-						<div className="absolute inset-0 flex items-center justify-between px-3 sm:px-3.5">
-							<p className="text-xs sm:text-sm font-bold text-[#2F6E68] drop-shadow-sm">{place.name}</p>
-							<span className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold text-[#389E95] drop-shadow-sm">画像差し替え予定</span>
-						</div>
+					<div key={place.name} className="col-span-3 relative overflow-hidden rounded-2xl border border-[#389E95]/25 bg-white aspect-3/2">
+						<Image src={place.imageSrc} alt={place.name} fill className="object-contain object-top" />
 					</div>
 				))}
 			</div>
@@ -241,6 +266,12 @@ export default function GroupSuggestionPage() {
 	const topDistance = useMemo(() => getRankedEntries(distanceStats), [distanceStats]);
 	const topCrowd = useMemo(() => getRankedEntries(crowdStats), [crowdStats]);
 	const topTime = useMemo(() => getRankedEntries(timeStats), [timeStats]);
+	const rankedSupportedAreas = useMemo<SupportedArea[]>(() => {
+		const fromVotes = topArea
+			.map(([area]) => area)
+			.filter((area): area is SupportedArea => area === "渋谷・原宿・表参道" || area === "新宿・代々木");
+		return Array.from(new Set([...fromVotes, ...SUPPORTED_AREAS]));
+	}, [topArea]);
 	const radarAverageValues = useMemo(() => {
 		return toRadarAverageValues(parsedConditions);
 	}, [parsedConditions]);
@@ -269,39 +300,52 @@ export default function GroupSuggestionPage() {
 	const groupType = useMemo(() => getGroupTypeByMismatch(mismatchTotal), [mismatchTotal]);
 
 	const suggestionCards = useMemo<SuggestionCard[]>(
-		() => [
-			{
-				title: "まずはみんな寄りプラン",
-				catchCopy: `${pickEntry(topSpending, 0, "おまかせ")}に楽しむ王道プラン`,
-				area: pickEntry(topArea, 0, "都内"),
-				places: [
-					{ name: `${pickEntry(topArea, 0, "都内")}の人気スポット`, imageSrc: purposeToImage(pickEntry(topPurpose, 0, "観光")) },
-					{ name: `${pickEntry(topArea, 0, "都内")}の定番カフェ`, imageSrc: "/purpose/cafe.svg" },
-					{ name: `${pickEntry(topArea, 0, "都内")}の寄り道エリア`, imageSrc: "/purpose/sightseeing.svg" },
-				],
-			},
-			{
-				title: "バランス重視プラン",
-				catchCopy: `${pickEntry(topDistance, 0, "30分以内")}で巡るちょうどいい休日`,
-				area: pickEntry(topArea, 1, pickEntry(topArea, 0, "都内")),
-				places: [
-					{ name: "軽めに遊べるスポット", imageSrc: "/purpose/entartainment.svg" },
-					{ name: "ゆったりランチ候補", imageSrc: "/purpose/meal.svg" },
-					{ name: "散歩しやすい街並み", imageSrc: purposeToImage(pickEntry(topPurpose, 1, pickEntry(topPurpose, 0, "観光"))) },
-				],
-			},
-			{
-				title: "気分転換プラン",
-				catchCopy: `${pickEntry(topCrowd, 0, "ふつう")}×${pickEntry(topTime, 0, "2時間くらい")}で新鮮に`,
-				area: pickEntry(topArea, 2, pickEntry(topArea, 0, "都内")),
-				places: [
-					{ name: "少し冒険するエリア", imageSrc: "/purpose/outdoor.svg" },
-					{ name: "新しい体験スポット", imageSrc: "/purpose/handmade.svg" },
-					{ name: "最後に寄れる休憩場所", imageSrc: "/purpose/museum.svg" },
-				],
-			},
-		],
-		[topArea, topCrowd, topDistance, topPurpose, topSpending, topTime],
+		() => {
+			const firstArea = rankedSupportedAreas[0] ?? DEFAULT_AREA;
+			const secondArea = rankedSupportedAreas[1] ?? firstArea;
+
+			const baseCards = [
+				{
+					title: "まずはみんな寄りプラン",
+					catchCopy: `${pickEntry(topSpending, 0, "おまかせ")}に楽しむ王道プラン`,
+					area: firstArea,
+					category: purposeToCategory(pickEntry(topPurpose, 0, "観光")),
+					placeNames: [
+						`${firstArea}の人気スポット`,
+						`${firstArea}の定番スポット`,
+					],
+				},
+				{
+					title: "バランス重視プラン",
+					catchCopy: `${pickEntry(topDistance, 0, "30分以内")}で巡るちょうどいい休日`,
+					area: secondArea,
+					category: purposeToCategory(pickEntry(topPurpose, 1, pickEntry(topPurpose, 0, "観光"))),
+					placeNames: ["軽めに遊べるスポット", "ゆったりランチ候補"],
+				},
+				{
+					title: "気分転換プラン",
+					catchCopy: `${pickEntry(topCrowd, 0, "ふつう")}×${pickEntry(topTime, 0, "2時間くらい")}で新鮮に`,
+					area: firstArea,
+					category: purposeToCategory(pickEntry(topPurpose, 2, pickEntry(topPurpose, 0, "観光"))),
+					placeNames: ["少し冒険するエリア", "新しい体験スポット"],
+				},
+			];
+
+			return baseCards.map((card, cardIndex) => {
+				const supportedArea = toSupportedArea(card.area);
+				const [firstImage, secondImage] = pickTwoAreaImages(supportedArea, card.category, cardIndex);
+				return {
+					title: card.title,
+					catchCopy: card.catchCopy,
+					area: supportedArea,
+					places: [
+						{ name: card.placeNames[0], imageSrc: firstImage },
+						{ name: card.placeNames[1], imageSrc: secondImage },
+					],
+				};
+			});
+		},
+		[rankedSupportedAreas, topCrowd, topDistance, topPurpose, topSpending, topTime],
 	);
 
 	useEffect(() => {
@@ -439,7 +483,7 @@ export default function GroupSuggestionPage() {
 								}}
 							>
 								<div ref={leftPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-r-3xl">
-									<div className="absolute top-0 right-0 h-full w-140 sm:w-155 pointer-events-none">
+									<div className="absolute top-0 right-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
 										<SuggestionCardCanvas card={prevCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 									<button
@@ -457,7 +501,7 @@ export default function GroupSuggestionPage() {
 								</article>
 
 								<div ref={rightPreviewRef} className="relative h-130 sm:h-140 overflow-hidden rounded-l-3xl">
-									<div className="absolute top-0 left-0 h-full w-140 sm:w-155 pointer-events-none">
+									<div className="absolute top-0 left-0 h-full w-[clamp(300px,calc(100vw-136px),542px)] pointer-events-none">
 										<SuggestionCardCanvas card={nextCard} radarValues={radarAverageValues} groupType={groupType} />
 									</div>
 									<button
