@@ -221,13 +221,13 @@ function SuggestionCardCanvas({
 	return (
 		<div className="rounded-3xl sm:rounded-4xl border-2 border-[#389E95] bg-[#F9FBF9] p-4 sm:p-5 shadow-[0_24px_56px_rgba(56,158,149,0.3),0_0_44px_rgba(56,158,149,0.24)] h-130 sm:h-140 overflow-hidden">
 			<div className="h-full grid grid-cols-3 gap-2.5 sm:gap-3 content-start">
-				<div className="row-span-1 col-span-3 rounded-2xl border border-[#389E95]/35 bg-[#D6F8C2] px-2 py-1.5 sm:px-2.5 sm:py-2 grid grid-cols-[0.85fr_2.15fr] gap-1.5 sm:gap-2 items-center">
+				<div className="row-span-1 col-span-3 rounded-2xl border border-[#389E95]/35 bg-[#D6F8C2] px-2 py-1.5 sm:px-2.5 sm:py-2 grid grid-cols-[0.8fr_2.2fr] gap-0.5 sm:gap-1 items-center">
 					<div className="h-full flex flex-col items-start justify-start gap-0">
 						<div className="w-full h-full -ml-4 sm:-ml-6">
 							<SuggestionRadarChart values={radarValues} series={radarSeries} />
 						</div>
 					</div>
-					<div className="h-full flex flex-col justify-start gap-0">
+					<div className="h-full flex flex-col justify-start gap-0 -ml-2 sm:-ml-3 pr-1 sm:pr-2">
 						<div className="flex items-start gap-0">
 							<p className="text-sm sm:text-base font-black text-[#2F6E68] leading-snug tracking-[0.01em] [text-shadow:0_1px_0_rgba(255,255,255,0.55),0_2px_6px_rgba(24,78,64,0.32)]">{card.catchCopy}</p>
 						</div>
