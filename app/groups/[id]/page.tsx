@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-// 🐧 HomeHeaderBar は使わず、TopLogoBar のみインポート
-import { TopLogoBar } from "@/components/ui/app-header";
+import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { BottomCurveBackground } from "@/components/ui/decorative-layout";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -112,14 +111,15 @@ export default function GroupRoomPage() {
             <TopLogoBar className="bg-[#D6F8C2]" rightSlot={<div />} />
 
             {/* ✨ 2. 自作ヘッダーバー：三本線を確実に排除し、アバターを右寄せ */}
-            <header className="relative z-20 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] shadow-sm">
-                <Link href="/groups">
-                    <Image src="/homelogo.svg" alt="home" width={32} height={32} />
-                </Link>
-                <div className="ml-auto">
-                    <TeamMembersHeader members={members} />
-                </div>
-            </header>
+            <HomeHeaderBar
+                href="/groups"
+                className="shadow-sm"
+                rightSlot={
+                    <div className="ml-auto">
+                        <TeamMembersHeader members={members} />
+                    </div>
+                }
+            />
 
             <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-10 px-6 pb-40">
                 <div className="relative w-full mb-24">

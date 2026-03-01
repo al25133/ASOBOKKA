@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { TopLogoBar } from '@/components/ui/app-header';
+import { HomeHeaderBar, TopLogoBar } from '@/components/ui/app-header';
 import { TeamMembersHeader } from '@/components/ui/team-members-header';
 
 type GroupMember = {
@@ -114,14 +114,15 @@ export default function GroupCreate() {
       <TopLogoBar className="bg-[#D6F8C2]" rightSlot={<div />} />
 
       {/* 🟢 2. ペンギンバー：濃い緑のバーにアバター */}
-      <header className="relative z-30 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] shadow-sm">
-        <Link href="/groups">
-          <Image src="/homelogo.svg" alt="home" width={32} height={32} />
-        </Link>
-        <div className="ml-auto">
-          <TeamMembersHeader members={members} />
-        </div>
-      </header>
+      <HomeHeaderBar
+        href="/groups"
+        className="z-30 shadow-sm"
+        rightSlot={
+          <div className="ml-auto">
+            <TeamMembersHeader members={members} />
+          </div>
+        }
+      />
 
       {/* 🐾 3. メイン：全面グリーン */}
       <div className="relative z-10 w-full max-w-100.5 flex flex-col items-center pt-10 px-6 pb-44">

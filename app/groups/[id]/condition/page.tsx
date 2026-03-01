@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { TopLogoBar } from "@/components/ui/app-header";
+import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { TeamMembersHeader } from "@/components/ui/team-members-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -135,7 +135,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
             setMessage("保存に失敗しました。");
             return;
         }
-        router.push(`/groups/${passcode}/result`);
+        router.push(`/groups/${passcode}/waiting`);
     };
 
     if (initializing) return <div className="pt-20 text-[#389E95] font-bold text-center">準備中...</div>;
@@ -234,14 +234,15 @@ function GroupConditionPageContent() {
     return (
         <main className="min-h-screen bg-[#D6F8C2] flex flex-col relative items-center overflow-x-hidden select-none">
             <TopLogoBar className="bg-[#D6F8C2]" rightSlot={<div />} />
-            <header className="relative z-30 w-full flex items-center justify-between px-6 py-2 bg-[#389E95] border-y-2 border-[#2d7d76] shadow-sm">
-                <Link href="/groups">
-                    <Image src="/homelogo.svg" alt="home" width={32} height={32} />
-                </Link>
-                <div className="ml-auto">
-                    <TeamMembersHeader passcode={params.id} />
-                </div>
-            </header>
+            <HomeHeaderBar
+                href="/groups"
+                className="z-30 shadow-sm"
+                rightSlot={
+                    <div className="ml-auto">
+                        <TeamMembersHeader passcode={params.id} />
+                    </div>
+                }
+            />
             <Suspense fallback={<div className="pt-20 text-[#389E95] font-bold text-center">読み込み中...</div>}>
                 <ConditionSelectionContent passcode={params.id} />
             </Suspense>
