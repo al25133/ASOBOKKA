@@ -17,5 +17,5 @@ jobs:
             -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${GH_TOKEN}" \
-            https://api.github.com/repos/al25133/ASOBOKKA/dispatches \
+            https://api.github.com/repos/atuy1219/ASOBOKKA/dispatches \
             -d '{"event_type":"upstream-updated","client_payload":{"branch":"main"}}'
