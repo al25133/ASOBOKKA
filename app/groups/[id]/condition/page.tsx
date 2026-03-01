@@ -135,7 +135,7 @@ function ConditionSelectionContent({ passcode }: { passcode: string }) {
             setMessage("保存に失敗しました。");
             return;
         }
-        router.push(`/groups/${passcode}/result`);
+        router.push(`/groups/${passcode}/waiting`);
     };
 
     if (initializing) return <div className="pt-20 text-[#389E95] font-bold text-center">準備中...</div>;

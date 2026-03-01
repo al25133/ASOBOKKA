@@ -2,19 +2,31 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { toPng } from "html-to-image";
 import { AccountMenu } from "@/components/ui/account-menu";
 import { HomeHeaderBar, TopLogoBar } from "@/components/ui/app-header";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import {
+	aggregate,
+	budgetToScale,
+	indexFromScale,
+	parseCondition,
+	spendingScale,
+	distanceScale,
+	crowdScale,
+	timeScale,
+	type ParsedCondition,
+} from "@/lib/group-result";
 
 type MemberChoice = {
 	user_id: string;
 	selected_area: string | null;
 	selected_purpose: string | null;
 	selected_value: string | null;
+	is_ready: boolean;
 };
 
 type RadarAxis = {
@@ -36,28 +48,6 @@ type GroupMemberProfile = {
 	avatar: string;
 };
 
-type ParsedCondition = {
-	spendingStyle: string | null;
-	distance: string | null;
-	crowd: string | null;
-	budget: number | null;
-	time: string | null;
-};
-
-function aggregate(items: Array<string | null>) {
-	return items.reduce<Record<string, number>>((acc, item) => {
-		if (!item) {
-			return acc;
-		}
-		acc[item] = (acc[item] ?? 0) + 1;
-		return acc;
-	}, {});
-}
-
-const spendingScale = ["のんびり", "ゆったり", "おまかせ", "食べ歩き", "アクティブ"];
-const distanceScale = ["徒歩圏", "電車1駅", "電車2〜3駅", "30分以内", "どこでも"];
-const crowdScale = ["とても少なめ", "少なめ", "ふつう", "にぎやか", "とてもにぎやか"];
-const timeScale = ["1時間以内", "2時間くらい", "3時間くらい", "半日", "終日"];
 const radarAxes: RadarAxis[] = [
 	{ label: "過ごし方", key: "spendingStyle" },
 	{ label: "距離", key: "distance" },
@@ -67,65 +57,6 @@ const radarAxes: RadarAxis[] = [
 ];
 
 const radarColors = ["#389E95", "#52A399", "#5A7C55", "#5A5A5A"];
-
-function parseCondition(raw: string | null): ParsedCondition {
-	if (!raw) {
-		return {
-			spendingStyle: null,
-			distance: null,
-			crowd: null,
-			budget: null,
-			time: null,
-		};
-	}
-
-	const getPart = (key: string) => {
-		const match = raw.match(new RegExp(`${key}:([^/]+)`));
-		return match?.[1]?.trim() ?? null;
-	};
-
-	return {
-		spendingStyle: getPart("過ごし方"),
-		distance: getPart("距離"),
-		crowd: getPart("人の多さ"),
-		budget: (() => {
-			const budgetRaw = getPart("予算");
-			if (!budgetRaw) {
-				return null;
-			}
-			const normalized = Number(budgetRaw.replace(/[^0-9]/g, ""));
-			return Number.isFinite(normalized) ? normalized : null;
-		})(),
-		time: getPart("時間"),
-	};
-}
-
-function indexFromScale(scale: string[], value: string | null) {
-	if (!value) {
-		return 3;
-	}
-	const index = scale.findIndex((item) => item === value);
-	return index >= 0 ? index + 1 : 3;
-}
-
-function budgetToScale(budget: number | null) {
-	if (budget === null) {
-		return 3;
-	}
-	if (budget <= 20000) {
-		return 1;
-	}
-	if (budget <= 40000) {
-		return 2;
-	}
-	if (budget <= 60000) {
-		return 3;
-	}
-	if (budget <= 80000) {
-		return 4;
-	}
-	return 5;
-}
 
 function getGroupTypeByMismatch(score: number) {
 	if (score <= 25) {
@@ -208,35 +139,16 @@ function RadarChart({
 
 	return (
 		<div className="w-full flex justify-center">
-			   <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ">
-				   <defs>
-					   <radialGradient id="radar-bg-gradient" cx="50%" cy="50%" r="50%">
-						   <stop offset="0%" stop-color="#fff" />
-						   <stop offset="100%" stop-color="#B6F2A2" />
-					   </radialGradient>
-					   <filter id="circle-shadow" x="-30%" y="-30%" width="160%" height="160%">
-						   <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#389E95" floodOpacity="0.25" />
-					   </filter>
-				   </defs>
-				   <circle cx={center} cy={center} r={maxRadius} fill="url(#radar-bg-gradient)" />
-				   {rings.map((ring) => {
-					   const points = axes
-						   .map((_, index) => {
-							   const point = toPoint(ring, index);
-							   return `${point.x},${point.y}`;
-						   })
-						   .join(" ");
-					   // 五角形の頂点を通る円（最外周のみ）
-					   if (ring === 5) {
-						   const first = toPoint(ring, 0);
-						   const radius = Math.sqrt(Math.pow(first.x - center, 2) + Math.pow(first.y - center, 2));
-						   return <g key={ring}>
-							   <polygon points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />
-							   <circle cx={center} cy={center} r={radius} fill="none" stroke="#fff" strokeWidth={2.2} filter="url(#circle-shadow)" />
-						   </g>;
-					   }
-					   return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
-				   })}
+			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="ズレ表示グラフ">
+				{rings.map((ring) => {
+					const points = axes
+						.map((_, index) => {
+							const point = toPoint(ring, index);
+							return `${point.x},${point.y}`;
+						})
+						.join(" ");
+					return <polygon key={ring} points={points} fill="none" stroke="#389E95" strokeOpacity="0.28" strokeWidth={1.5} />;
+				})}
 
 				{axes.map((_, index) => {
 					const point = toPoint(5, index);
@@ -322,6 +234,7 @@ function RadarChart({
 
 export default function GroupResult() {
 	const params = useParams<{ id: string }>();
+	const router = useRouter();
 	const passcode = params.id;
 	const [avatarId, setAvatarId] = useState("1");
 	const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -384,7 +297,7 @@ export default function GroupResult() {
 
 			const { data, error } = await supabase
 				.from("group_members")
-				.select("user_id, selected_area, selected_purpose, selected_value")
+				.select("user_id, selected_area, selected_purpose, selected_value, is_ready")
 				.eq("group_id", groupData[0].group_id);
 
 			setLoading(false);
@@ -398,14 +311,27 @@ export default function GroupResult() {
 		void load();
 	}, [passcode]);
 
+	const allReady = useMemo(() => choices.length > 0 && choices.every((choice) => choice.is_ready), [choices]);
+
+	useEffect(() => {
+		if (!loading && !allReady) {
+			router.replace(`/groups/${passcode}/waiting`);
+		}
+	}, [allReady, loading, passcode, router]);
+
+	const readyChoices = useMemo(
+		() => choices.filter((choice) => choice.is_ready && Boolean(choice.selected_value)),
+		[choices],
+	);
+
 	const orderedChoices = useMemo(() => {
 		if (!currentUserId) {
-			return choices;
+			return readyChoices;
 		}
-		const self = choices.filter((choice) => choice.user_id === currentUserId);
-		const others = choices.filter((choice) => choice.user_id !== currentUserId);
+		const self = readyChoices.filter((choice) => choice.user_id === currentUserId);
+		const others = readyChoices.filter((choice) => choice.user_id !== currentUserId);
 		return [...self, ...others];
-	}, [choices, currentUserId]);
+	}, [currentUserId, readyChoices]);
 
 	const parsedConditions = useMemo(() => orderedChoices.map((choice) => parseCondition(choice.selected_value)), [orderedChoices]);
 	const spendingStats = useMemo(() => aggregate(parsedConditions.map((item) => item.spendingStyle)), [parsedConditions]);
@@ -527,6 +453,10 @@ export default function GroupResult() {
 	};
 
 	if (loading) {
+		return <main className="min-h-screen bg-[#D6F8C2]" />;
+	}
+
+	if (!allReady) {
 		return <main className="min-h-screen bg-[#D6F8C2]" />;
 	}
 
