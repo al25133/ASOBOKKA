@@ -1,0 +1,21 @@
+name: Notify Fork
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repository_dispatch to fork
+        env:
+          GH_TOKEN: ${{ secrets.FORK_REPO_DISPATCH_TOKEN }}
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            https://api.github.com/repos/al25133/ASOBOKKA/dispatches \
+            -d '{"event_type":"upstream-updated","client_payload":{"branch":"main"}}'
